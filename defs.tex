@@ -8,6 +8,7 @@
 
 % Graphics:
 \usepackage[final]{graphicx}
+\graphicspath{{figs/}}
 %\usepackage{graphicx} % use this line instead of the above to suppress graphics in draft copies
 %\usepackage{graphpap} % \defines the \graphpaper command
 
@@ -67,8 +68,9 @@
 % \usepackage{bold-extra}
 
 % Tikz
-\usepackage{tikz}
+\usepackage{tikz,pgf}
 \usetikzlibrary{matrix,arrows,positioning,calc,fit,backgrounds}
+\usepackage{pgfplots}
 
 % To control enum item labelling/numbering
 \usepackage[shortlabels, inline]{enumitem}
@@ -189,31 +191,31 @@
 \newcommand{\pipe}{\triangleright}
 
 %% Caligraphic
-\newcommand{\Aa}{{\mathcal{A}}}
-\newcommand{\Bb}{{\mathcal{B}}}
-\newcommand{\Cc}{{\mathcal{C}}}
-\newcommand{\Dd}{{\mathcal{D}}}
-\newcommand{\Ee}{{\mathcal{E}}}
-\newcommand{\Ff}{{\mathcal{F}}}
-\newcommand{\Gg}{{\mathcal{G}}}
-\newcommand{\Hh}{{\mathcal{H}}}
-\newcommand{\Ii}{{\mathcal{I}}}
-\newcommand{\Jj}{{\mathcal{J}}}
-\newcommand{\Kk}{{\mathcal{K}}}
-\newcommand{\Ll}{{\mathcal{L}}}
-\newcommand{\Mm}{{\mathcal{M}}}
-\newcommand{\Nn}{{\mathcal{N}}}
-\newcommand{\Oo}{{\mathcal{O}}}
-\newcommand{\Pp}{{\mathcal{P}}}
-\newcommand{\Qq}{{\mathcal{Q}}}
-\newcommand{\Rr}{{\mathcal{R}}}
-\newcommand{\Ss}{{\mathcal{S}}}
-\newcommand{\Tt}{{\mathcal{T}}}
-\newcommand{\Uu}{{\mathcal{U}}}
-\newcommand{\Vv}{{\mathcal{V}}}
-\newcommand{\Ww}{{\mathcal{W}}}
-\newcommand{\Yy}{{\mathcal{Y}}}
-\newcommand{\Zz}{{\mathcal{Z}}}
+%\newcommand{\Aa}{{\mathcal{A}}}
+%\newcommand{\Bb}{{\mathcal{B}}}
+%\newcommand{\Cc}{{\mathcal{C}}}
+%\newcommand{\Dd}{{\mathcal{D}}}
+%\newcommand{\Ee}{{\mathcal{E}}}
+%\newcommand{\Ff}{{\mathcal{F}}}
+%\newcommand{\Gg}{{\mathcal{G}}}
+%\newcommand{\Hh}{{\mathcal{H}}}
+%\newcommand{\Ii}{{\mathcal{I}}}
+%\newcommand{\Jj}{{\mathcal{J}}}
+%\newcommand{\Kk}{{\mathcal{K}}}
+%\newcommand{\Ll}{{\mathcal{L}}}
+%\newcommand{\Mm}{{\mathcal{M}}}
+%\newcommand{\Nn}{{\mathcal{N}}}
+%\newcommand{\Oo}{{\mathcal{O}}}
+%\newcommand{\Pp}{{\mathcal{P}}}
+%\newcommand{\Qq}{{\mathcal{Q}}}
+%\newcommand{\Rr}{{\mathcal{R}}}
+%\newcommand{\Ss}{{\mathcal{S}}}
+%\newcommand{\Tt}{{\mathcal{T}}}
+%\newcommand{\Uu}{{\mathcal{U}}}
+%\newcommand{\Vv}{{\mathcal{V}}}
+%\newcommand{\Ww}{{\mathcal{W}}}
+%\newcommand{\Yy}{{\mathcal{Y}}}
+%\newcommand{\Zz}{{\mathcal{Z}}}
 
 % Wrappers: Parens, brackets, etc
 % \newcommand{\op}[1]{\operatorname{#1}}
@@ -255,8 +257,36 @@
 % Paper specific macros & commands
 % ----------------------------------------
 
+\usepackage{cleveref}
+\usepackage[linesnumbered,lined,ruled,vlined,commentsnumbered]{algorithm2e}
 
+\usepackage{enumitem}
+
+\newlist{criteria}{enumerate}{10}
+\setlist[criteria]{label*=\arabic*}
+
+\newtheorem{heuristic}[theorem]{Heuristic}
+\crefname{heuristic}{heuristic}{heuristics}
+\Crefname{heuristic}{Heuristic}{Heuristics}
+
+\crefname{criteriai}{Criterion}{Criteria}
+\Crefname{criteriai}{Criterion}{Criteria}
+\crefname{alg}{algorithm}{algorithms}
+\Crefname{alg}{Algorithm}{Algorithms}
 % Put your definitions here
+% From Abtin's template
+\usepackage{subcaption}
+\usepackage{xifthen}
+\newcommand{\mcaption}[3]{
+        \ifthenelse{\isempty{#2}}
+              {\caption[#1]{\small{#3} \label{#1}}}
+              {\caption[#1]{{\sc #2.} \small{#3} \label{#1}}}
+        }
+\newcommand{\algcaption}[3]{
+        \ifthenelse{\isempty{#3}}
+                   {\caption[#1]{{\sc #2.} \label{#1}}}
+                   {\caption[#1]{{\sc #2.} \newline\small{#3} \label{#1}}}
+        }
 
 
 %%% Local Variables:

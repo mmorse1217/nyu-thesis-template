@@ -1,0 +1,31 @@
+
+\section{Kernels\label{app:kernels}}
+Here we list the elliptic \pde's investigated in this work along with the associated kernels for their single- and double-layer potentials.
+In this section, $\vx$ and $\vy$ are in $\mathbb{R}^3$, $\vx$ is the point of evaluation and $\vy$ is a point on the boundary and $\vr = \vx - \vy$. 
+Recall that $\vn$ is the outward pointing unit normal at $\vy$ to the domain boundary $\Gamma$.
+We denote the single layer kernel, also known as the \textit{fundamental solution} or \textit{Green's function} of the \pde, by $S$ and the double layer kernel by $D$.
+\begin{enumerate}
+  \item \textit{Laplace equation}:
+    \begin{align*}
+      &\Delta u = 0\\
+      &S(\vx,\vy) = \frac{1}{4\pi}\frac{1}{\|\vr\|}, \quad 
+      D(\vx, \vy) = - \frac{1}{4\pi} \frac{\vr \cdot \mathbf{n}}{\|\vr\|^3}
+    \end{align*}
+  \item \textit{Stokes equation}:
+    \begin{align*}
+      &\mu\Delta u - \nabla p = 0, \,\, \nabla \cdot u = 0\\
+      &S(\vx,\vy) = \frac{1}{8\pi\mu}\left( \frac{1}{\|\vr\|} + \frac{\vr \otimes\vr}{\|\vr\|^3}\right), \quad 
+      D(\vx, \vy) = - \frac{3}{4\mu\pi} \frac{\vr \otimes\vr}{\|\vr\|^5}(\vr \cdot \mathbf{n})
+    \end{align*}
+  \item \textit{Elasticity equation}:
+    \begin{align*}
+      &\mu\Delta u - \frac{\mu}{1-2\nu}\nabla(\nabla \cdot u) = 0\\
+      &S(\vx,\vy) = \frac{1}{16\pi\mu(1-\nu)}\left( \frac{3-4\nu}{\|\vr\|} + \frac{\vr \otimes\vr}{\|\vr\|^3}\right), \\
+      &D(\vx, \vy) = - \frac{1-2\nu}{8\mu(1-\nu)} \left(
+      \frac{1}{\|\vr\|^3} \left(
+      \vr \otimes \vn - (\vr\cdot\vn) I - \vn \otimes \vr 
+      \right) - \frac{3}{1-2\nu}
+      \frac{(\vr\cdot\vn) (\vr \otimes \vr)}{\|\vr\|^5}
+      \right)
+    \end{align*}
+\end{enumerate}

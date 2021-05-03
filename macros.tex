@@ -1,0 +1,94 @@
+%% macro to define and reference terms with document
+\usepackage{relsize}
+\newcommand\abbrev[1]{\textsmaller{\uppercase{#1}}} %could do \textsc{\large\lowercase{#1}} or {\small\uppercase{#1}}, insert \textup to keep the letters in Roman/upright form, e.g. \abbrevformat{O\textup{\small pen}MP}
+
+\newcommand\gmres{\abbrev{GMRES}\xspace}
+\newcommand\pde{\abbrev{PDE}\xspace}
+\newcommand\bvp{\abbrev{BVP}\xspace}
+\newcommand\pdes{\abbrev{PDE}s\xspace}
+\newcommand\ki{kernel-independent\xspace}
+\newcommand\kifmm{\abbrev{KIFMM}\xspace}
+\newcommand\fmm{\abbrev{FMM}\,}
+\newcommand\fft{\abbrev{FFT}\,}
+\newcommand\oned{\abbrev{1D}\,}
+\newcommand\twod{\abbrev{2D}\,}
+\newcommand\threed{\abbrev{3D}\,}
+\newcommand\qbx{\abbrev{QBX}\,}
+\newcommand\bie{\abbrev{BIE}\,}
+\newcommand\aabb{\abbrev{AABB}\,}
+\newcommand\pvfmm{\abbrev{PVFMM}\,}
+\newcommand\qbkix{\texttt{hedgehog}\,}
+\newcommand\pou{\abbrev{POU}\,}
+\newcommand\bem{\abbrev{BEM}\,}
+\newcommand\mfs{\abbrev{MFS}\,}
+\newcommand\iga{\abbrev{IGA}\,}
+\newcommand\wfine{\vector{w}_\text{fine}}
+\newcommand\phifine{\vector{\phi}_\text{fine}}
+\newcommand\Gammah{\hat{\Gamma}}
+\newcommand\nystrom{Nystr\"om\xspace}
+
+
+%% shortcuts (this paper) %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\def\GL{Gauss-Legendre}
+\def\Pex{\ensuremath{P_\mathrm{ex}}}
+\def\Cex{\ensuremath{C_\mathrm{ex}}}
+\def\Pnear{\ensuremath{P_\mathrm{near}}}
+\def\Cnear{\ensuremath{C_\mathrm{near}}}
+\def\Tree{\ensuremath{\mathscr T}}
+\def\CenterSet{\ensuremath{\mathscr C}}
+\def\PatchSet{\ensuremath{\mathscr P}}
+\def\UnPatch{\ensuremath{{\mathscr U}_p}}
+\def\UnBox{\ensuremath{{\mathscr U}_b}}
+\def\CCover{\ensuremath{C_\mathrm{cover}}}
+\def\BCover{\ensuremath{B_\mathrm{cover}}}
+\def\Npatch{\ensuremath{N_\mathrm{patch}}}
+\def\Ncenter{\ensuremath{N_\mathrm{center}}}
+\def\Nbox{\ensuremath{N_\mathrm{box}}}
+\DeclareMathOperator{\dist}{dist}
+
+
+\newcommand\lbl[1]{\ensuremath{\mathrm{#1}}}
+\newcommand\qP{{\mathcal{P}}}
+\newcommand\I{{\mathcal{I}}}
+\newcommand\Pfine{{\mathcal{P}_\lbl{fine}}}
+\newcommand\Pcoarse{{\mathcal{P}_\lbl{coarse}}}
+\newcommand\err[1]{{\eps_\lbl{#1}}}
+\newcommand{\etrg}{\err{target}}
+\newcommand\mrm[1]{\mathrm{#1}}
+\let\vec\undefined
+\let\vector\undefined
+\newcommand\vector[1]  {\bm{#1}}
+\newcommand\vx{{\vector{x}}}
+\newcommand\hr{{\hat{r}}}
+\newcommand\vg{{\vector{g}}}
+\newcommand\vX{{\vector{X}}}
+\newcommand\vP{{\vector{P}}}
+\newcommand\vy{{\vector{y}}}
+\newcommand\vd{{\vector{d}}}
+\newcommand\vc{{\vector{c}}}
+\newcommand\vhc{{\hat{\vector{c}}}}
+\newcommand\vz{{\vector{z}}}
+\newcommand\vn{{\vector{n}}}
+\newcommand\vr{{\vector{r}}}
+\newcommand\vsx{{\vector{s}_{\vector{x}}}}
+\newcommand\vu{{\vector{u}}}
+\newcommand\Cone{{C_{(1)}}}
+\newcommand\Ctwo{{C_{(2)}}}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\newcommand{\RN}[1]{%
+    \textup{\uppercase\expandafter{\romannumeral#1}}%
+  }
+\usepackage{mathtools}
+\DeclarePairedDelimiter\ceil{\lceil}{\rceil}
+\DeclarePairedDelimiter\floor{\lfloor}{\rfloor}
+
+\newcommand\Nf{\mathcal{N}_\lbl{far}}
+\newcommand\Ni{\mathcal{N}_\lbl{inter}}
+\newcommand\Nn{\mathcal{N}_\lbl{near}}
+\newcommand\Nt{\mathcal{N}_\lbl{tot}}
+\newcommand\Ninit{N_\lbl{init}}
+
+\newcommand{\Lmx}{L_{\lbl{max}}}
+\newcommand{\Lmn}{L_{\lbl{min}}}
+\newcommand{\ellm}{\ell_{min}}
+

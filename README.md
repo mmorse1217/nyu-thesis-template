@@ -13,3 +13,9 @@ How to use:
   I'd recommend using a file per chapter and using `\input` commands to include them in `thesis.tex`.
 
 I hope this helps! Feedback (via issues) and updates (via pull requests) welcome.
+
+Extra dependencies required:
+texlive-fonts-extra
+texlive-bibtex-extra
+
+

@@ -1,0 +1,264 @@
+
+\section{Complexity Analysis\label{sec:complexity}}
+In this section, we analyze the complexity of the algorithms required by \qbkix. 
+The input to our overall algorithm is a domain boundary $\Gamma$ with $\Ninit$ patches and boundary condition $f$.
+We begin with a summary of algorithm parameters that impact complexity: 
+
+\begin{itemize}
+\item The number of patches $N$ \emph{after} admissibility refinement.  
+  This is a function of $\Ninit$, the geometry of $\Gamma$, the definition of $f$, and the choices of parameters $a$ and $b$ in check point construction. 
+\item Quadrature order $q$ and the degree of smoothness $k$ of $\Gamma$ and $f$.
+  We assume that $k$ is sufficiently high to obtain optimal error behavior for a given $q$ by letting $k=2q$ in \cref{eq:error_quad_gen_target}.
+\item \qbkix interpolation order $p$. 
+\item The numbers of evaluation points in different zones $\Nf$, $\Ni$, and $\Nn$, with $\Nt = \Nf+\Ni+\Nn$.
+%\item Maximum upsampling ratio $m = \max_i m_i$, where $m_i$ is the upsampling ratio for the $i$-th patch.
+%\item Target error $\etrg$ used to determine check point location.
+\end{itemize}
+
+%The complexity is also affected by the geometric characteristics of the surface. These include maximum patch size $\Lmx$, relative minimal patch size $\Lmn = \beta_0 \Lmx$, $\beta_0 \leq 1$, as well as \emph{minimal feature size} $\ellm = \alpha_0\Lmx$ and \emph{the variation of area distortion} of the parametrization $C_J$, which we now define more precisely.  
+%The local feature size $\ellm$ is defined in terms of the \emph{medial axis} of the surface.  The medial axis of a surface $\Gamma$, $M(\Gamma)$, is the set of points in $\mathbb{R}^3$ with more than one closest point on $\Gamma$. For $\vx \in\Gamma$, the local feature size  $\ell(\vx)$ is the distance from $\vx$ to $M(\Gamma)$. We assume that the minimal feature size \emph{relative to $\Lmx$} is bounded from below by $\alpha_0$, i.e., $\ell(\vx) \geq \alpha_0 \Lmx$.  
+%The variation of the area distortion $C_J(P)$ is $\max_{(u,v)} |J|/\min_{(u,v)} |J|$, where $J$ is the Jacobian of the patch parametrization for an initial patch $P$, and $C_J$ is the maximum of $C_J(P)$ over all patches; this constant indicates how nonuniform the parametrization is, and allows us to estimate how the patch size decreases with refinement \note[MJM]{add a sentence with example: high $C_J$ vs. low $C_J$}. 
+%We assume that the $\alpha_0$, $\beta_0$ and $C_J$ are independent of $N^{init}$. We also assume that surface principal curvatures are bounded, independently of $N^{init}$. 
+The complexity is also affected by the geometric characteristics of $\Gamma$. 
+These include:
+\begin{itemize}
+  \item The \textit{maximum patch length} $\Lmx = \max_P L(P)$
+  \item The \textit{relative minimal patch length} $\Lmn = \beta_0 \Lmx$, $\beta_0 \leq 1$.
+  \item The \textit{minimal feature size relative to $\Lmx$}, $\ellm = \alpha_0\Lmx$, which is defined in terms of the \textit{local feature size} and the \textit{medial axis} of $\Gamma$.
+The medial axis of $\Gamma$, denoted $M(\Gamma)$, is the set of points in $\mathbb{R}^3$ with more than one closest point on $\Gamma$. 
+For $\vy \in\Gamma$, the local feature size  $\ell(\vy)$ is the distance from $\vy$ to $M(\Gamma)$.
+We assume that the local feature size is bounded below by $\alpha_0\Lmx$, i.e., $\ell(\vy) \geq \alpha_0 \Lmx = \ellm$ for $\vy \in \Gamma$.
+  \item The \emph{maximum variation of area distortion} of the parametrization $C_J$.
+The variation of the area distortion of a patch $P$ is $C_J(P) = \max_{(u,v)} |J_P(u,v)|/\min_{(u,v)} |J_P(u,v)|$, where $J_P(u,v)$ is the Jacobian of $P$ at the point $(u,v)$. 
+We define $C_J = \max_{P\in\Gamma} C_J(P)$.
+This value is an indicator of how non-uniform the parametrization of $P$ is and allows us to estimate how the patch length decreases with refinement. 
+\end{itemize}
+
+
+We assume that the $\alpha_0$, $\beta_0$ and $C_J$ are independent of $\Ninit$. 
+We also assume that principal curvatures are bounded globally on $\Gamma$ and independent of $\Ninit$. 
+We now briefly summarize the results of this section:
+
+\begin{itemize}
+\item \emph{Admissibility.} (\cref{sec:complexity_admissibility}) The complexity of this step is $O(\Ninit \log \Ninit)$,
+  with constants dependent on $\alpha_0$, $\beta_0$ and $C_J$. 
+  The logarithmic factor is due to use of an \aabb tree for closest surface point queries. 
+
+\item \emph{Upsampling.} (\cref{sec:complexity_upsampling}) The complexity of upsampling is $ O(m  N \log(N))$, where $m$ is the upsampling ratio.
+  The logarithmic factor appears for similar reason to admissibility,
+  with constants that depend on geometric parameters and the boundary condition through the error estimate of \cref{sec:error}.
+  We show that the upsampling ratio is independent of $N$.
+  %The upsampling ratio is $m = O(\etrg^{-1/q})$.
+  
+\item \emph{Point marking.} (\cref{sec:complexity-point-marking}) Identifying which zone an evaluation point belongs to ($\Omega_F, \Omega_I$ or $\Omega_N$) depends on $N$ and the total number of points to be classified $\Nt = \Nf + \Ni + \Nn$. 
+  The complexity is $O(\Nt \log N)$ with constants dependent on geometric parameters, due to the cost of closest surface point queries. 
+  
+\item\emph{ Far, intermediate and near zone integral evaluation.} (\cref{sec:complexity_matvec}) The complexity of these components depends on $N$ and  $\Nf$, $\Ni$ and $\Nn$ respectively, with the general form $O(s_1 N + s_2 N')$, where $N'$ is the number of evaluation points in the corresponding class.  For the far field, $s_1 = s_2 = 1$.  For the intermediate evaluation,
+$s_2 =1$, and $s_1 = m q^2$; finally, for the near zone, $s_2 = p$, and $s_1 = mq^2$, the same as in the intermediate zone.  
+If $b$ is chosen appropriately, the intermediate and near zone error is $\etrg$. 
+
+  %\note[DZ]{This is not quite true: we should probably modify the upsampling alg description, so that we actually get
+  %  this in the near zone, not just intermediate; otherwise it is a pain to explain, as there is also the extra dependence on the extrapolation order, so smth like $(\Lmx*2^\eta_1)^q$}
+  %  \note[MJM]{fix} 
+  \item \emph{\gmres solve.} Due to the favorable conditioning of the double-layer formulation in \cref{eq:int-eq}, \gmres converges rapidly to a solution in a constant number of iterations for a given $\Gamma$ that is independent of $N$. 
+    This means that the complexity to solve \cref{eq:int-eq} is asymptotically equal (up to a constant dependent on $\Gamma$) to the complexity equal to a near-zone evaluation with $\Nn=N(q+1)^2$. 
+\end{itemize}
+
+
+\subsection{Admissibility \label{sec:complexity_admissibility}}
+
+The patch refinement procedure \cref{sec:admissible} to enforce \cref{criteria:1,criteria:2} of admissibility and achieve given approximation errors of the geometry $\err{g}$ and boundary data $\err{f}$ is a local operation on each patch.
+If we assume that $\Lmn$, $\Lmx$, the partial derivatives of all patches composing $\Gammah$, and the partial derivatives of $f$ are bounded, then 
+ errors $\err{g}$ and $\err{f}$ can always be achieved after a fixed number of refinement steps. As a consequence, this stage must have complexity $O(\Ninit)$. 
+
+
+We focus on the additional refinement needed to satisfy \cref{criteria:3}: ensuring that each check center $\vhc$ is closest to its corresponding quadrature point $\vy$. 
+This can be restated in terms of local feature size: for a quadrature patch $P \in \Gamma$ and quadrature node $\vx \in P$ with check center $\vhc$, $\|\vx - \vhc\|_2 \leq \ell(\vx) \leq \alpha_0 L_0$. 
+We will first relate the number of required refinement steps $\eta$ to satisfy \cref{criteria:3} to the shape parameters $\alpha_0$ and $C_J$, then we will show that this number does not depend on $N$ under our assumptions.
+
+Recall that the distance from a check center to the surface  for a patch $P$ is given by
+$R + r(p+1)/2 = (a+ (p+1)b/2)L(P)= K L(P)$. %, where $L(P)$ is the square root of the area of $P$.
+After $\eta$ refinement steps, the area of each child of $P$ relative to $P$ itself will have decreased by at least by $C_J(P)(1/4)^\eta$.  
+Since the distance from $\vhc$ to the surface is proportional to $L(P)$, we can estimate the required level
+of uniform refinement to satisfy \cref{criteria:3} by requiring that the check center distance is less than the minimal local feature size, then taking the maximum value of $L(P)$ over all patches:
+\[
+K \Lmx \sqrt{C_J} (1/2)^\eta \leq \ellm = \alpha_0 \Lmx
+\]
+This yields
+
+\begin{equation}
+  \eta   =  \lceil -\log_2 \frac{\alpha_0}{K \sqrt{C_J}}\rceil,
+\label{eq:eta-estimate}
+\end{equation}
+which we note depends only on nondimensional quantities $\alpha_0$, $K$ and $C_J$ characterizing the shape of the surface and its parametrization.  
+If we assume these to be independent of $N$, then
+the number of required levels of refinement $\eta$ are also independent of $N$. 
+This means that the number of patches $N$ generated \cref{alg:admissibility} is a linear function of $\Ninit$, bounded by $4^{\eta} \Ninit$.
+
+Next, we estimate the complexity of work per patch in \cref{alg:admissibility} to determine if a given patch requires refinement. 
+As described in \cref{sec:admissible}, for each patch, we query the \aabb tree $T_B$ for patches that are at the distance $R + r(p+1)/2 = K L(P)$ from a check center $\vhc$.
+The cost of the query is logarithmic in the number of patches $\Ninit$ and proportional to the number of patches $N(\vhc)$ returned.  
+This means that we need to estimate the number of patches that can be within the distance $K L(P)$ from $\vhc$.
+
+Consider an area element $dA$ of $\Gammah$ at a point $\vx_0$. The parallel surface of $dA$,
+given by $\vx_0 + h \vn(\vx_0)$ does not have self-intersections when $|h| \leq \ellm$ and has a corresponding area element given by $dA^{h} = (1+ h \kappa_1)(1+h \kappa_2)dA$ \cite[Section 6.2]{K}, where $\kappa_1$ and $\kappa_2$ are the principal curvatures of $\Gammah$ at $\vx_0$.
+The volume of the truncated cone bounded by $dA$ and $dA^{h}$ of height $\ellm$ can be computed directly from the integral $\int_0^{\ellm} dA^h dh$:
+\[
+  dV = dA \ellm (1 + \frac{1}{2} (\kappa_1 + \kappa_2) \ellm + \frac{1}{3} \kappa_1 \kappa_2 \ellm^2)   = dA\ellm(1 + \frac{1}{2} H \ellm + \frac{1}{3} K \ellm^2)
+\]
+where $K$ and $H$ are Gaussian and mean curvatures respectively. As principal curvatures satisfy
+$\kappa_i \geq -1/\ellm$,  this expression has minimal value for $\kappa_1 = \kappa_2 = -1/\ellm$:
+\begin{equation}
+dV \geq \frac{1}{3}\ellm dA
+\label{eq:vol-lower-bound}
+\end{equation}
+In other words, each surface element $dA$ has (at least) a volume $\frac{1}{3}\ellm dA$ with no other surface elements inside associated with it.  From this, we can estimate the total area of surface contained within distance $K L(P)$ from $\vhc$ by equating \cref{eq:vol-lower-bound} with the volume of a sphere of raidus $KL(P)$, producing $4 \pi K^3 L(P)^3/\ellm$.
+Since the area of each patch is at least $L_{\min}^2$, the number of patches $KL(P)$ from $\vhc$ is bounded by
+
+\begin{equation}
+  N(\vhc) \leq  4 \pi K^3 \frac{L(P)^3}{\ellm \Lmn^2} \leq 4 \pi K^3 \frac{\Lmx^3}{\ellm \Lmn^2} =
+  \frac{4 \pi K^3}{\alpha_0 \beta_0^2}
+ \label{eq:numpatches-estimate}
+ \end{equation}
+
+This is independent of $\Ninit$, which means that the complexity of nearest patch retrieval is $O( \Ninit \log \Ninit)$, with constant given by the product of
+\eqref{eq:numpatches-estimate} and $4^\eta$, with $\eta$ given by \eqref{eq:eta-estimate}.
+
+To complete the complexity estimate of the admissibility refinement, we need to estimate the cost of computing the closest point on each patch.
+The complexity of the Newton's method for finding roots of polynomials  in \cref{app:closest_point} depends only on the polynomial degree and the desired accuracy of the optimization, which we can assume to be bounded by floating-point precision \cite{schleicher2017newton}.
+We conclude that the overall complexity of admissibility refinement is $O( \Ninit \log \Ninit)$ with constants proportional to the patch degree and optimization accuracy.
+
+\subsection{Upsampling\label{sec:complexity_upsampling}}
+We estimate the complexity of the upsampling algorithm in \cref{sec:adaptive_upsampling} in terms of $N$, the number of patches produced by admissibility refinement, and a parameter $\eps$, which is the desired accuracy achieved by the final upsampled patches at the check points.
+As the distance from the surface to the check points $\vc_i$ is bounded from below by
+$a \Lmn$,  the $\tilde{V}$ term 
+in \cref{eq:error_quad_gen_target} is bounded from above by $C \Lmn^{-2q-1}$, for a constant $C$ independent of $q$. 
+Furthermore, since $\Gammah$ and $f$ are assumed to be smooth, the density and its derivatives can also be assumed to be bounded.
+The overall form of the estimate in \cref{eq:error_quad_gen_target} can then be bounded and written as $\tilde{C}(q) \Lmn^{-2q-1} \tilde{L}^{2q}$ for some constant $\tilde{C}(q)$. 
+The maximum patch length obtained by refinement $\tilde{L}$ is 
+\begin{equation}
+  \tilde{L} = \Lmx^\lbl{fine} \leq \Lmx 2^{-\tilde{\eta}},
+  \label{eq:Ltilde}
+\end{equation}
+where $\tilde{\eta}$ is the maximum amount of required patch refinement.
+By setting $C(q) \Lmn^{-2q-1} \tilde{L}^{2q} \leq \eps$ and using \cref{eq:Ltilde}, we can 
+obtain an upper bound for $\tilde{\eta}$ as a function of $\Lmn$, $\Lmx$, and $\eps$:
+\begin{equation}
+  \tilde{\eta} \leq -\frac{1}{2q}\log_2 \left( \frac{\eps}{\Lmn^{-2q-1} \Lmx^{2q} C(q)}\right)= \log_2 \eps^{-1/(2q)} + \bar{C}(q,\Lmn,\Lmx),
+  \label{eq:tildeeta}
+\end{equation}
+for some constant $\bar{C}(q,\Lmn,\Lmx)$.
+
+The number of points generated by upsampling is $O(4^{\tilde{\eta}} N )$.
+Taking powers of both sides of \cref{eq:tildeeta} yields an
+estimate in terms of $\err{target}$:  $O( (2^{\tilde{\eta}})^2N ) \leq O(\eps^{-2/(2q)}N ) =  O(\eps^{-1/q}N )$. 
+As discussed in \cref{sec:complexity_admissibility}, the closest point computation needed to determine if a checkpoint is in $\Omega_I$ has $\log (N)$ cost per point, leading to $O(\eps^{-1/q} N \log(N))$ overall complexity and an upsampling factor of $\eps^{-1/q}$. 
+Since we desire upsampled quadrature with an accuracy of $10^{-12}$, we set $\eps$ as such to arrive at the desired complexity.
+
+
+%Note that both $C$ and $\tilde{C}(q)$ above depend on higher-order derivatives of the patch $P$ and therefore implicitly on principal curvatures $\kappa_1$ and $\kappa_2$.
+%This partial explains the difference in accuracy between \cref{eq:error_quad_gen_target} and \cref{eq:rem2d_heuristic}.
+%In practice, we use the more precise error bound \cref{eq:rem2d_heuristic}, so the actual refinement is less than \cref{eq:error_quad_gen_target} might suggest in this analysis
+
+\subsection{Point marking\label{sec:complexity-point-marking}}
+In the point marking algorithm of \cref{app:point_marking}, we first use the Laplace \fmm to cull points far from $\Gamma$, which requires $O(N+\Nt)$ time. 
+Let $\bar{L} = \frac{1}{M}\sum_{P \in \Pcoarse}L(P)$ be the average patch length.
+After \fmm culling, the remaining unmarked evaluation points are those whose distances from $\Gamma$ are approximately $\bar{L}$ or less.  For each unmarked point $\vx$,  we query the \aabb tree $T_T$ for the nearest triangle in the linear approximation of $\Pcoarse$.
+
+Since there are $O(N)$ such triangles in $T_T$, we can perform this query in $O(\log N)$ time \cite{samet2006foundations}.
+This triangle provides a candidate closest patch that is distance $d_0$ from $\vx$. 
+We then use to query $T_B$ for all bounding boxes at distance $d_0$ from $\vx$.  
+This query too can be performed in $O(\log N)$ time \cite{samet2006foundations} and returns a bounded number of boxes and that each is processed in constant time, as discussed in \cref{sec:complexity_admissibility}.
+As the number of unmarked points after culling is bounded above by $\Nt$, the overall complexity of our marking scheme is $O(\Nt \log N)$.
+
+
+\subsection{Integral evaluation complexity \label{sec:complexity_matvec}}
+We assume that geometric admissibility criteria are already satisfied. 
+All integral evaluation is accelerated using an \fmm with complexity $O(N + \Nt)$. 
+\paragraph{Far zone}  The complexity of far evaluation is just the complexity of computing the integrals on $\Pcoarse$ using standard quadrature and \fmm acceleration, i.e.,  $O(q^2N + \Nf)$.% \sim O(n^2N + \Nf)$.
+
+\paragraph{Intermediate zone} The complexity of the intermediate zone evaluation is similar to that of the far zone.
+However the computation is performed on $\Pfine$ rather than $\Pcoarse$, which is up to $m$ times finer than $\Pcoarse$,  with $m = O(\eps^{-1/q})$ and $\eps=10^{-12}$.
+The density values must be interpolated from points in $\Pcoarse$ to points in $\Pfine$: this can be computed in $O(mq^4N)$ time using a \twod version of the barycentric interpolation formula \cite{BT}.
+This yields an overall complexity of  $O(mq^4N + m q^2N + \Ni)$.
+Although not asymptotically dominant, for all practical target errors, the quadrature evaluation is the dominant cost in practice due to suppressed \fmm-related constants, as demonstrated in \cref{sec:results-compare}.
+
+\paragraph{Near zone} %In our algorithm, the near zone includes points on the surface itself. 
+\cref{sec:singular-eval} requires a closest point computation, an intermediate-zone evaluation at $p$ check points and an extrapolation for each target point in $\Omega_N$.
+The intermediate zone calculation is the dominant cost, resulting in a complexity of $O(mq^4N + m q^2 N + p\Nn)$.
+
+\paragraph{\gmres solve} As a result of the second-kind integral formulation in \cref{sec:formulation}, the cost of solving \cref{eq:int-eq} via \gmres is asymptotically equal to the cost of a single singular integral evaluation, since the low number of iterations are independent of $N$.  
+In our algorithm, this is a special case of near-zone evaluation with $\Nn = q^2N$, producing a complexity of $O(mq^4N + mq^2N + pq^2N) =O( (m+p+mq^2) q^2 N)$. 
+
+\paragraph{Overall complexity for uniform point distribution}
+We now suppose that we wish to evaluate the solution $u$ determined by a density $\phi$ at a set of uniformly distributed points throughout $\Omega$.
+We also assume that $\Gammah$ is discretized uniformly by $N$ patches, i.e., $\Lmx = O(N^{-1/2})$ and that the distances between samples in $\Omega$ and from samples to $\Gammah$ are also $O(N^{-1/2})$.
+Since the total number of evaluation points is proportional to $1/\Lmx^3$, this implies that $\Nt = O(N^{3/2})$.
+
+The size of the intermediate zone $\Omega_I$ is bounded by the estimate discussed in \cref{sec:complexity_upsampling}.
+Letting $d_I$ be the shortest distance along a normal vector of $\Gammah$ which is contained in $\Omega_I$, following the discussion in \cref{sec:complexity_upsampling} yields the following relation:
+\begin{equation}
+  \tilde{C}(n) d_I^{-2q-1} \Lmx^{2q} \leq \eps.
+\end{equation}
+Solving for $d_I$ gives us
+\begin{equation}
+  d_I \leq \left(\frac{\eps}{C(n)}\right)^{-\frac{1}{2q-1}} \left(\Lmx\right)^{\frac{2q}{2q-1}}.
+\end{equation}
+We are interested in the regime as $N \to \infty$, or $\Lmx \to 0$.
+Since $\Lmx^{\frac{2q}{2q-1}} \leq \sqrt{\Lmx} = O(N^{-1/4})$, this gives us 
+\begin{equation}
+  d_I \leq \left(\frac{\eps}{C(n)}\right)^{-\frac{1}{2q-1}} N^{-1/4} = O(\eps^{-1/2q}N^{-1/4}) = O(\sqrt{m}N^{-1/4}),
+\end{equation}
+after recalling from above that $m = O(\eps^{-1/q})$ is the average upsampling rate to produce $\Pfine$ from $\Pcoarse$.
+The size of the near zone is, by construction, of the order $\Lmx$.
+It follows that $\Ni =O(  \sqrt{m} N^{5/4})$, and $\Nn =O(N)$.
+
+The overall complexity for this evaluation is the sum of the cost of each separate evaluation: 
+\begin{align*}
+  &O(q^2N + \Nf + mq^4 N + mq^2 N + \Ni + mq^4 N + mq^2N + p\Nn)\\
+  %&= O((m + mq^2)q^2N + \Nf + \Ni  + p\Nn)\\
+  &= O\left( (m+mq^2)q^2N + \Nt + (p-1)\Nn \right)
+\end{align*}
+Using the estimates for $\Nt$ and $\Nn$ and dropping dominated terms, we obtain  $O( (m + m q^2)q^2 N + N^{3/2})$ for the overall complexity.
+This suggests that for a given $q$ and $\eps$, the minimal cost is obtained from choosing the number of discretization points 
+$N =O(m^2)$, i.e., $ N = O(\eps^{-2/q})$. 
+
+%The overall complexity, $O(n^2N + \Nf + mn^2 N + \Ni + n\Nn  + (m+n) n^2 N)$,
+%i.e., $O( (m + n)n^2 N  + \Ni + n \Nn + \Nf) = O( (m+n)n^2 N + \Nt + (n-1)\Nn)$.  
+%Using the estimates for $\Nt$ and $\Nn$,
+%we obtain, dropping  dominated terms,  $O( m n^2 N + N^{3/2})$ for the overall complexity.
+%This suggests that for a given target error $\etrg$, the minimal cost is obtained from choosing the number of surface points
+%$N \sim m^2$, i.e., $\etrg^{-4/n}$. 
+
+
+
+
+\iffalse
+\subsection{AABB Tree complexity}
+It is a non-trivial task to prove that an AABB tree query has logarithmic complexity with respect to the number of contained boxes for general geometries in 3D.
+Since the location of bounding boxes are a function of $\Gamma$, they have no well-defined spatial partition in general; this makes it challenging to make claims about the tree depth.
+This is a research topic in its own right \note[MJM]{list two recent-ish papers}.
+However, Proposition 1 of \cite{RKO} similarly applies to AABB trees:
+\begin{proposition}
+  Any query of an AABB tree requires in $O(d+n_\lbl{box})$ work, where $d$ is the number of levels in the tree, and $n_\lbl{box}$ is the number of bounding boxes returned from the query.
+  \label{}
+\end{proposition}
+\note[MJM]{we can comment about how no closed boundary can have the worst case complexity of \cite{hammer2002box} globally, but i don't think we can prove $log(N)$ time}.
+
+\subsection{Complexity comparison with \cite{YBZ}}
+\note[MJM]{some comments about why we're only looking at one solver, not sure how to justify}
+We compare \qbkix with the singular quadrature scheme of \cite{YBZ}, which we will refer to as \textit{partition of unity quadrature}, or \pou quadrature.
+This scheme is quite different from the \qbkix method presented in this work; we summarize the key differences to avoid confusion.
+\note[MJM]{add image highlighting difference in discretization, overlapping vs non overlapping}
+In \cite{YBZ}, $\Gamma$ is defined as a set of compactly supported overlapping patches, detailed in \cite{ying2004simple}.
+Each patch is discretized with a periodic tensor-product trapezoidal rule with spacing $h$.
+The potential is computed at all discretization points, then a new partition of unity function $\eta(\vx)$, centered at the target point, is used to subtract the inaccurate near contribution.
+$\eta(\vx)$ is then integrated with a periodic polar trapezoidal rule, which cancels the singularity by centering the polar grid at the target, and added to the accumulated potential.
+
+The complexity of this algorithm is $O(N^{3/2})$, because the number of points used in the polar trapezoidal rule for each target point is $O(\sqrt{N})$. 
+Asymptotically, \qbkix will outperform \pou quadrature.
+However, consider that the dominant cost of \qbkix is the \fmm evaluation of size $O(kN + pN)$; meanwhile, the \fmm evaluation of \pou quadrature is simply $O(N+N)$, since the source and targets are equal.
+This also implies that the size of the \fmm tree for \pou quadrature is smaller than for \qbkix, whose source and target points are more distributed in space.
+For small values of $N$ and low target accuracies, we can expect \pou quadrature to have a shorter \fmm setup and evaluation time than \qbkix, and therefore a lower overall runtime.
+
+\fi

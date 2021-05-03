@@ -1,0 +1,89 @@
+
+\section{Find the closest point on a patch  \label{app:closest_point}}
+%\subsection{Optimization\label{app:closest_point_opt}}
+%\begin{figure}%[!htb]
+%  \centering
+%    \includegraphics[width=.5\linewidth]{figs/inkscape/newton-opt.pdf}
+%    \mcaption{fig:newton-opt}{Newton's optimization schematic}{\note[MJM]{write me}}
+%\end{figure}
+We include our algorithm to find the closest point $\vy$ on a patch $\vP$ to a point $\vx \in \mathbb{R}^3$ in the section for completeness.
+For a surface or quadrature patch $\vP$ and point $\vx \in \mathbb{R}^3$, 
+we need to compute a point $\vy = \vP(s^*, t^*)$ such that
+\begin{equation}
+  (s^*, t^*) = \argmin_{(s,t) \in [-1,1]^2} \|\vx - \vP(s,t)\|_2^2 =  \argmin_{(s,t) \in [-1,1]^2} \vr(s,t)\cdot \vr(s,t)
+\end{equation}
+where $ \vr = \vr(s,t) = \vx - \vP(s,t)$; let $g(s,t) = \vr\cdot \vr$.
+We first consider the unconstrained problem
+\begin{equation}
+    (s^*, t^*) = \argmin_{(s,t) \in \mathbb{R}^2} \|\vx - \vP(s,t)\|_2^2  = \argmin_{(s,t) \in \mathbb{R}^2} \psi(s,t) 
+\end{equation}
+We solve this optimization problem with Newton's method.
+The first and second derivatives of $\psi$ can be evaluated efficiently, since they are polynomials of fixed order.
+The gradient and Hessian of the objective function are:
+\begin{equation}
+  \nabla \psi  =
+  \begin{pmatrix}
+    -\vP_s\cdot \vr \\
+    -\vP_t\cdot \vr \\
+  \end{pmatrix}, \quad
+  %\label{eq:grad-newton} 
+  \nabla^2 \psi = 
+\begin{pmatrix}
+  \vP_s \cdot \vP_s - \vr\cdot \vP_{ss} & \vP_s \cdot \vP_t - \vr\cdot \vP_{st}\\
+  \vP_s \cdot \vP_t - \vr\cdot \vP_{st} & \vP_t \cdot \vP_t - \vr\cdot \vP_{tt}  \\
+\end{pmatrix}.
+  \label{equ:grad-hess-newton}
+\end{equation}
+The optimality conditions are 
+\begin{equation}
+\vP_s^* \cdot \vr^* = 0, \quad \vP_t^* \cdot \vr^* = 0, \quad (u,v) = (s^*, t^*).
+  \label{eq:kkt}
+\end{equation}
+at a local optimum $(s^*, t^*)$.
+
+Let $\psi_i = \psi(s_i,t_i)$, where $(s_i,t_i)$ is the value of the solution during the $i$th iteration of Newton's method.
+To solve for the descent direction in Newton's method, we need to solve
+\begin{equation}
+  \nabla^2 \psi_i \, \eta_i = -\nabla \psi_i
+  \label{eq:newton-system}
+\end{equation}
+where $\eta_i = (\Delta s_i,\Delta t_i)$ is the $i$th Newton update to $(s_i,t_i)$ such that
+\begin{equation}
+  s_{i+1} = \alpha_i\Delta s_i + s_i,\quad
+  t_{i+1} = \alpha_i\Delta t_i + t_i
+  \label{}
+\end{equation}
+
+We use four iterations of a backtracking line search with an Armijo condition to compute the step length $\alpha_i$ to ensure an appropriate size step is taken in case the initial guess is outside the region of quadratic convergence.
+We compute the solution $(s^*, t^*)$ by iterating
+\begin{equation}
+  (s_n,t_n) = (s_{n-1}, t_{n-1}) + \alpha_{n-1} \eta_{n-1}, \quad \text{ while } \vP_s \cdot \vr > \err{opt}, \quad \vP_t \cdot \vr > \err{opt},
+  \label{eq:descent_iter}
+\end{equation}
+until convergence, i.e., $\psi_i\approx \err{opt}$, $\vr \approx \vn(\vy)$.
+
+If $(s^*, t^*) \in (-1,1)^2$, then the solution to the unconstrained problem is also the solution to the constrained problem.
+However, if the closest point lies in $\mathbb{R}\setminus [-1,1]^2$, we need to ensure the inequality constraints are satisfied.
+Additionally, if $(s^*, t^*)$ is on the boundary of $[-1,1]^2$, either $s^*$ or $t^*$ should be exactly zero; with the optimization scheme above, we can only claim that $|s^*| < \err{opt}$ (similarly for $t^*$).
+To address both of these troubles, we can solve a one-dimensional projection of \cref{eq:newton-system} on to the boundary of $[-1,1]^2$.
+For example, to find the closest point along the edge $v=0$, the Newton iteration becomes
+\begin{equation}
+  s_n = s_{n-1} + \alpha_{n-1}\frac{-\vP_s \cdot \vr}{\vP_s\cdot \vP_s - \vr\cdot \vP_{ss}},
+  \label{eq:geom-newton-1d}
+\end{equation}
+where $\vP_s$, $\vP_{ss}$ and $\vr$ are evaluated at $s_{n-1}$.
+Since the boundary is composed of $[-1,t], [1,t], [s,-1], [s,1]$ for $s,t\in[-1,1]$, we solve \cref{eq:geom-newton-1d} once for each interval.
+
+This final algorithm to compute the closest point is as follows:
+\begin{enumerate}
+  \item We solve \cref{eq:newton-system} on an extended parameter domain $[-1-c, 1+c]^2$, and terminate the Newton iteration if $(s_i,t_i)$ walks outside this boundary. 
+    If the Newton iteration terminates inside $[-1,1]^2$, then we've found the closest point.
+    We typically choose $c = .2$.
+  \item  If the solution is outside $[-1,1]^2$, we solve \cref{eq:newton-system} along each component of the boundary of $[-1,1]^2$, also on an extended parameter domain $[-1-c,1+c]$,
+    by choosing an initial guess contained within the interval.
+    The solution to these four problems that yields a minimal distance to $\vx$ to used as the closest point, if the solution is inside $[-1,1]$.
+  \item If the closest point on the boundary is still outside of $[-1,1]^2$, the
+      closest point to $\vx$ is chosen from $\vP(-1,-1), \vP(-1,1), \vP(1,-1),$ and $\vP(1,1)$ closest to $\vx$.
+\end{enumerate}
+This gives us an algorithm to compute the closest point on a quadrature patch $\vP$ to $\vx$.
+The \oned and \twod Newton minimizations converge in ten iterations on average.

@@ -1,0 +1,166 @@
+\section{Introduction\label{sec:intro}}
+
+Linear elliptic homogeneous partial differential equations (\pdes) play an important role in modeling many physical interactions, including
+electrostatics, elastostatics, acoustic scattering, and viscous fluid flow.
+Using ideas from potential theory allow us to reformulate the associated boundary value problem (\bvp) as an integral equation.
+The solution to the \bvp can then be expressed as a layer potential, i.e., a surface convolution against the \pde's fundamental solution.
+Discretizing the integral equation formulation offers several potential advantages over common used direct \pde discretization methods such as finite element or finite volume methods. 
+
+First, the system of equations uses asymptotically fewer variables because only the domain boundary requires discretization.
+There is no need to discretize the volume, which is often the most time-consuming
+and error-prone task in the full simulation pipeline, especially if complex boundary geometry is involved.
+This aspect of integral formulations is particularly important for problems with changing geometries such as particulate flows, or flows with deforming boundaries, as well as moving boundaries.
+Second, while the algebraic system resulting from discretization is dense, efficient $O(N)$ methods are available to solve it.
+A suitable integral formulation can yield a well-conditioned system that can be solved using an iterative method like \gmres in relatively few iterations.
+Third, high-order quadrature rules for smooth functions can be leveraged to dramatically improve the accuracy for a given discretization size over a standard method.
+In other words, integral equation solvers can be both more efficient, usually if high accuracy is desired, and more robust, as they do not require volume meshing.
+
+For elliptic problems with smooth (or mostly smooth) domain boundaries, high-order methods have a significant advantage over standard methods, drastically reducing the number of degrees of freedom needed to approximate a solution to a given accuracy. 
+However, realizing this potential presents a significant challenge: for integral equation methods to achieve high-order accuracy, they require a high-order quadrature and a high-order surface approximation to compute the integrals accurately.
+
+
+One of the main difficulties in constructing high-order boundary integral equation (\bie) solvers is the need for accurate quadrature rules for \emph{singular} integrals, as
+the formulation requires the solution of an integral equation involving the singular fundamental solution of the \pde.
+Moreover, if the solution needs to be evaluated arbitrarily close to the boundary, then one must numerically compute \emph{nearly singular} integrals with high-order accuracy.
+In some sense, the near singular integrals are even more difficult to handle compared to singular integrals, since simple change of variable techniques that are often used to eliminate singularities on the boundary are harder to apply. 
+Precomputing high-order singular/near-singular quadrature weights also presents a considerable problem, as these necessarily depend on the local surface shape and different sets of weights are required for each sample point.
+Furthermore, the sampling density required for accurate singular/near-singular integration is highly dependent on the boundary geometry.
+For example, two nearly touching pieces of the boundary require a sampling density proportional to the distance between them; applying such a fine discretization globally will become prohibitively expensive.
+
+%In this paper, we present a new, high-order, boundary integral solver with the following features:
+%(1) a standard tensor-product polynomial-based representation is used for surfaces, which enables compatibility with common geometric modeling surface representations and significantly simplifying parallelization. 
+%(2) We rely on a scheme that reduces the computation of near-singular \emph{and} singular integrals to computation of non-singular integrals at a set of \emph{check points} sufficiently well separated from the surface.
+%(3) We use a fully automatic adaptive refinement scheme to ensure necessary geometric criteria on the surface discretization for accurate integration.
+%(4) We describe an accurate heuristic error estimate driving the second adaptive refinement stage.
+%
+%We next discuss the related work, and then summarize our contributions in greater detail in context.
+
+\subsection{Contributions}
+We introduce a new, high-order boundary integral solver for non-oscillatory elliptic \pdes. 
+A preliminary parallel version of this method is used in \cite{lu2019scalable} to simulate red blood cell flows through complex blood vessel with high numerical accuracy.
+We describe the 
+%non-parallel 
+singular/near-singular quadrature scheme for single- and double-layer potentials with the following features:
+\begin{itemize}
+\item {\bf Surface representation.} %Compared to \cite{YBZ}, which uses a specialized overlapping-patch surface representation from \cite{ying2004simple}, 
+  We use standard B\'ezier patches to define the domain boundary, which simplifies the use of the solver on \abbrev{CAD} geometry, increases the efficiency of surface evaluation and simplifies parallelization. 
+        %(In comparison, previous work has used high-order global parametrization, such as tensor-product Fourier basis functions \cite{malhotra2019taylor}, high-order triangle surface elements \cite{wala20193d}, or high-order patch-based manifold constructions \cite{bruno2007accurate, ying2004simple}.) \note[DZ]{Seems out of place, why talk about previous work in the middle of contributions?}
+        We use a \emph{quad-tree} of patches that allows us to approximate complex surfaces with nonuniform curvature distribution efficiently and to refine sampling as required by surface quadrature. 
+   Our method extends directly to other surface representation.
+  
+\item {\bf Singular and near-singular quadrature.}
+We introduce an approximation-based singular/near-singular quadrature scheme for single- and double-layer potentials in \threed: after computing the solution at a set of nearby \textit{check points}, placed along a line intersecting the target, we extrapolate the solution to the target point. 
+We have named this scheme \qbkix, for reasons that are apparent from \Cref{fig:qbkix-schematic}.
+In order to ensure accuracy of the scheme for complex geometries, a key component of our scheme is a set of geometric criteria for surface sampling needed for accurate integration along with fast algorithms to refine the sampling adaptively so that these criteria are satisfied. 
+
+Our approach is originally motivated by the near-singular evaluation scheme of \cite{YBZ,QB}, which implements a similar scheme that includes an additional on-surface singular evaluation to allow for interpolation of the solution. 
+Removing this interpolation step and directly extrapolating solution values achieves optimal complexity without greatly affecting accuracy.
+
+%Further improvements in our method are inspired by the recent algorithmic advances in the \qbx literature. 
+%As in \cite{RBZ}, our quadrature method relies solely on kernel evaluations and is therefore valid for any linear, constant-coefficient \pde, making it very simple algorithmically.
+%However, rather than computing an approximate solution in a disk containing the target point, we construct an approximation along a line intersecting the target.
+%This is similar to the work of \cite{ST}; a new set of check points is required for each target point, but each extrapolation has asymptotically optimal complexity.
+
+\item{\bf Refinement for geometric admissibilty and quadrature accuracy.}
+%Our geometric admissibility criteria are similar to \cite{wala20193d}. \note[DZ]{need to elaborate}
+We present a set of criteria that allows for accurate integration via \qbkix called \textit{geometric admissibilty}.
+This is similar in spirit to \cite{RKO} and \cite{wala20193d}, but adapted to the geometry of our particular quadrature scheme.
+To guarantee quadrature accuracy of our method, we detail an adaptive $h$-refinement approach of the integral equation discretization based on a simple criteria to enable a fast refinement pipeline.
+%To guarantee quadrature accuracy of our method, we opt for an adaptive $h$-refinement approach of the integral equation discretization rather than the $p$-refinement approach taken in \cite{wala20193d} and the adaptive global parameter selection approach of \cite{aT1}.
+%This allows us to take boundary curvature and variation in the booundary data into account during upsampling.
+%This allows for the quadrature resolution to vary across the boundary domain.
+%\item {\bf Complexity analysis} We provide a detailed analysis of the geometry processing and query algorithms that \qbkix requires and demonstrate $O(N)$ complexity.
+\item {\bf Error convergence and comparison} We apply \qbkix to a variety of problems on various geometries to demonstrate high-order convergence. We also compare our method with \cite{YBZ} to highlight the differences between global and local singular quadrature schemes.  We also solve Laplace and Stokes problems on challenging domain boundaries.
+%\item{\bf Error estimate and heuristics.}
+%    We demonstrate the error behavior of a simple \oned extrapolation of a singular function in finite arithmetic.
+%    We have also derived an approximate, iteration-free error heuristic in \threed, similar to \cite{aT2}, that is used to determine the amount of upsampling required each patch.
+%    Moreover, by only using point evaluation of the solution, we also avoid the \qbx-\fmm error coupling observed in \cite{RKO} and addressed in \cite{wala2018fast, wala20193d}. 
+\end{itemize}
+
+\subsection{Related Work\label{sec:related_work}}
+%In an effort to realize the benefits of boundary integral methods, the development of singular and near-singular integration methods has become a well-studied area of research. 
+We will restrict our discussion to elliptic \pde solvers in \threed using boundary integral formulations. 
+The common schemes to discretize boundary integral equations are the \textit{Galerkin} method, the \textit{collocation} method, and the \textit{\nystrom} method \cite{atkinson2009numerical}.
+After choosing a set of basis functions to represent the solution, the Galerkin method forms a linear system for the coefficients of the solution by computing double integrals of the chosen basis functions multiplied by singular kernels.
+The collocation method computes a set of unknown functions that match the solution at a prescribed set of points. 
+To form the required linear system, it assumes that an accurate quadrature rule is available for evaluating the layer potential at the discretization points. 
+For a particular choice of quadratures, collocation and \nystrom discretizations can lead to equivalent algebraic systems \cite[Chapter 13]{K}. 
+In this paper, we focus on the \emph{\nystrom} discretization, which is both simple (the integral in the equation is replaced by the quadrature approximation) and enables very efficient methods to solve the discretized integral equation.
+The Galerkin and collocation approaches are commonly referred to as \textit{boundary element methods} (\bem) and have become very popular.
+There have been many optimized \bem implementations for elliptic (Laplace, Helmholtz) and Maxwell problems. 
+One such implementation is \bem++, presented in \cite{smigaj2015solving}, with extensions for adaptivity added in \cite{bespalov2019adaptive,betcke2019adaptive}.
+\cite{chaillat2017fast,chaillat2017theory} present iterative solvers for high-frequency scattering problems in elastodynamics, based on a \bem implementation coupled with fast summation methods to enable accurate solutions on complex triangle meshes.
+\cite{abduljabbar2019extreme} outlines a fast exascale \bem solver for soft body acoustic problems in \threed, also on triangle meshes.
+For a more complete background of \bem, we refer the reader to \cite{steinbach2007numerical}.
+
+A significant advancement in the field of finite element methods, called \textit{isogeometric analysis} (\iga)\cite{hughes2005isogeometric}, has been recently applied to boundary integral formulations.  
+\iga couples the basis functions defining the surface geometry with the analytic approaches for the finite element scheme. 
+Most relevant to this work, \iga has recently been applied to singular and hypersingular boundary integral equations with a collocation discretization \cite{taus2016isogeometric} with great success. 
+A \nystrom \iga method coupled with a regularized quadrature scheme is detailed in \cite{zechner2016isogeometric}.
+
+%In the \bie literature, singular and near-singular integration schemes tend to fall into one of three categories: \textit{singularity cancellation} (remove the singularity via a change of variables), \textit{singularity subtraction} or \textit{asymptotic correction} methods.
+In the \bie literature, singular and near-singular integration schemes fall into one of the several categories: \textit{singularity cancellation},  \textit{asymptotic correction}, \textit{singularity subtraction} or \textit{custom quadrature} schemes.
+Singularity cancellation schemes apply a change of variables to remove the singularity in the layer potential, allowing for the application of standard smooth quadrature rules. 
+The first polar change of variables was detailed in the context of acoustic scattering \cite{bruno2001fast}, which leveraged a partition of unity and a polar quadrature rule to remove the singularity in the integrand of layer potential.
+Fast summations were performed with \fft's and the periodic trapezoidal rule enables high-order convergence; the method was extended to open surfaces in \cite{bruno2013high}.
+This methodology was applied to general elliptic \pdes in \cite{YBZ} and coupled with the kernel-independent fast multipole method \cite{ying2004kernel} and a $C^\infty$ surface representation for complex geometries \cite{ying2004simple}.
+Recently, \cite{malhotra2019taylor} demonstrated that the choice of partition of unity function used for the change of variables has a dramatic effect on overall convergence order, although not in the context of elliptic \pdes.
+The first singularity cancellation scheme in \threed on general surfaces composed of piecewise smooth triangles was presented in \cite{bremer2012nystrom,bremer2013numerical} by splitting a triangle into three subtriangles at the singularity and computing a polar integral on each new triangle.
+\cite{ganesh2004high} introduced a change of variables method for acoustic scattering on \threed surfaces parametrized by spherical coordinates by integrating over a rotated coordinate system that cancels out the singularity.
+
+Asymptotic correction methods study the inaccuracies due to the singular \pde kernel with asymtotic analysis and apply a compensating correction. % which removes the singularity in the integrand but introduces errors in solution; corrections are applied to ensure high-order accuracy.
+\cite{beale2004grid,beale2016simple,tlupova2019regularized} compute the integral with a regularized kernel and add corrections for regularization and discretization for the single and double layer Laplace kernel in \threed, along with the Stokeslet and stresslet in \threed.
+\cite{carvalho2018asymptotic1} computes an asymptotic expansion of the kernel itself, which is used to remove the aliasing error incurred when applying smooth quadrature rules to near-singular layer potentials. 
+This method is extended to \threed in \cite{carvalho2018asymptotic} and a complete asymptotic analysis of the double-layer integral is performed in \cite{khatri2020close}.
+
+Singularity subtraction methods \cite{jarvenpaa2003singularity, jarvenpaa2006singularity, nair2013singularity} explicitly subtract the singular component of the integrand, which produces a smooth bounded integral that can be integrated with standard quadrature rules.
+Custom quadrature rules aim to integrate a particular family of functions to high-order accuracy.
+This can allow for arbitrarily accurate and extremely fast singular integration methods, since the quadrature rules can be precomputed and stored \cite{alpert1999hybrid, xiao2010numerical}.
+
+The most noteworthy singular quadrature scheme that does not fit into one of the above categories is that of \cite{HO}. 
+This method is similar to the second-kind barycentric interpolation \cite{BT}; it forms a rational function whose numerator and denominator compensates for the error as the target point approaches the boundary. 
+\cite{wu2020solution} has implemented an adaptive version of \cite{HO} for complex Stokes flows in \twod and
+\cite{klinteberg2019accurate} have recently produced a remarkable extension to nearly-singular line integrals in \twod and \threed.
+While this method performs exceptionally well in practice, it does not immediately generalize to \threed surfaces in an efficient manner.
+
+The \textit{method of fundamental solutions}, which represents the solution as a sum of point charges on an equivalent surface outside of the \pde domain, removing the need for singular evaluation, has also seen a great deal of success in \twod \cite{barnett2008stability} and in axis-symmetric \threed problems \cite{liu2016efficient}. Recently, \cite{gopal2019solving} has introduced an \twod approach similar in spirit to the method of fundamental solutions for domains with corners, but formulated as a rational approximation problem in the complex plane rather than as a boundary integral equation. 
+The lack of singular integration makes these methods advantageous, but placing the point charges robustly can be challenging in practice. 
+General \threed geometries also remain a challenge.
+
+There has been a great deal of recent work on special analyses of regions with corners \cite{SR,S,serkh2018solution,hoskins2019numerical,rachh2017solution,serkh2016solution}.
+Rather than a dyadic refinement of the discretization toward corners to handle the artificial singularities, these works have shown that the solution can be appropriately captured with special quadratures for a certain class of functions.
+Although not yet generalized to \threed, this work has the potential to vastly improve the performance of \threed \nystrom boundary integral methods on regions with corners and edges.
+
+Our method falls into a final category: approximation-based quadrature schemes. 
+The first use of a local expansion to approximate a layer potential near the boundary of a \twod boundary was presented in \cite{barnett2014evaluation}.
+By using an refined, or \textit{upsampled}, global quadrature rule to accurately compute coefficients of a Taylor series, the resulting expansion serves as a reasonable approximation to the solution near the boundary where quadrature rules for smooth functions are inaccurate.
+This scheme was then adapted to evaluate the solution both near and on the boundary, called Quadrature by Expansion (\qbx) \cite{KBGN}. 
+The first rigorous error analysis of the truncation error of \qbx was carried out in \cite{EGK}.
+
+Great progress has been made in this area since \cite{KBGN}.
+A fast implementation of \qbx in \twod, along with a set of geometric constraints required for well-behaved convergence, was presented in \cite{RKO}.
+However, the interaction of the expansions of \qbx and the expansions used in the translation operators of the \fmm resulted in a loss of accuracy, which required an artificially high multipole order to compensate.
+\cite{wala2018fast} addresses this shortcoming by enforcing a confinement criteria on the location of expansion disks relative to \fmm tree boxes.
+\cite{aT2} provided extremely tight error heuristics for various kernels and quadrature rules using contour integration and the asymptotic approach of \cite{elliott2008clenshaw}.
+\cite{aT1} then leveraged these estimates in a \qbx algorithm for Laplace and Helmholtz problems in \twod that adaptively selects the amount of upsampled quadrature and the expansion order for each \qbx expansion.
+In the spirit of \cite{ying2004kernel}, \cite{RBZ} generalizes \qbx to any elliptic \pde by using potential theory to form a local, least-squares solution approximation using only evaluations of the \pde's Green's function.
+
+The first extension of \qbx to \threed  was \cite{ST}, where the authors present a \textit{local, target-specific } \qbx method on spheroidal geometries.
+In a local \qbx scheme, an upsampled accurate quadrature is used as a local correction to the expansion coefficients computed from the coarse quadrature rule over the boundary.
+This is in contrast with a \textit{global} scheme, where the expansion coefficients are computed from the upsampled quadrature with no need for correction.
+The first local \qbx scheme appears in \cite{barnett2014evaluation} in \twod, but the notion of local \fmm corrections dates back to earlier work such as \cite{alpert1999hybrid, kapur1997high}.
+The expansions in \cite{ST} computed in a target-specific \qbx scheme can only be used to evaluate a single target point, but each expansion can be computed at a lower cost than a regular expansion valid in a disk.
+The net effect of both these algorithmic variations are greatly improved constants, which are required for complicated geometries in \threed.
+In \cite{aT2}, very accurate error heuristics are derived for the tensor product Gauss-Legendre rule on a surface panel and a simple spheroidal geometry in \threed, which were then leveraged to estimate \qbx quadrature errors.
+\cite{af2016fast} generalized \qbx to Stokes problems on spheroidal geometries in \threed.
+\cite{wala20193d} extends the \qbx-\fmm coupling detailed in \cite{wala2018fast}, along with the geometric criteria and algorithms of \cite{RKO} that guarantees accurate quadrature, to \threed surfaces. 
+\cite{wala2019optimization} improves upon this by adding target-specific expansions to \cite{wala20193d}, achieving a 40\% speed-up and \cite{wala2020approximation} provides a thorough error analysis of the interaction between computing \qbx expansions and \fmm local expansions.
+
+
+The rest of the paper is organized as follows: 
+In \cref{sec:formulation}, we briefly summarize the problem formulation, geometry representation and discretization.
+In \cref{sec:algo}, we detail our singular evaluation scheme and with algorithms to enforce admissibility, adaptively upsample the boundary discretization, and query surface geometry to evaluate singular/near-singular integrals.
+In \cref{sec:error}, we provide error estimates for \qbkix. %and a complexity analysis for our scheme. 
+%We also derive a quadrature error heuristic to use as a refinement criteria in adaptive upsampling
+In \cref{sec:complexity}, we summarize the complexity of each of the algorithms described in \cref{sec:algo}.
+In \cref{sec:results}, we detail convergence tests of our singular evaluation scheme and compare against other state-of-the-art methods.
