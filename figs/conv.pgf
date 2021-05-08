@@ -1,0 +1,33 @@
+\begin{tikzpicture}
+  \begin{loglogaxis}[%
+      width=2in,
+      height=1in,
+      scale only axis,
+      separate axis lines,
+      every outer x axis line/.append,
+      every x tick label/.append,
+      xmin=100,
+      xmax=10000,
+      xlabel={Number of time steps ($T/\Delta t$)},
+      every outer y axis line/.append,
+      every y tick label/.append,
+      ymin=5e-2,
+      ymax=1,
+      ylabel={Error in center of mass},
+      %xlabel style={font=\large},
+      %ylabel style={font=\large},
+      legend pos=south west,
+      legend cell align=left,
+    ]
+    \addplot [color=plt-blue,line width=1.0pt,mark=*,mark size=1.2pt,mark repeat=1,mark phase=0]
+         table[x index=2,y index=3]{figs/conv.dat};
+    \addlegendentry{$p=32$}
+
+    \addplot [color=plt-orange,line width=1.0pt,mark=square*,mark size=1.2pt,mark repeat=1,mark phase=0]
+        table[x index=0,y index=1]{figs/conv.dat};
+    \addlegendentry{$p=16$}
+
+    \addplot [color=black,line width=1.0pt,dotted,domain=150:5000]{400/x};
+    \addlegendentry{$O(\Delta t)$}
+  \end{loglogaxis}
+\end{tikzpicture}%

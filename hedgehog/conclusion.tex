@@ -1,0 +1,21 @@
+\section{Conclusion\label{sec:conclusion}}
+We have presented \qbkix, a fast, high-order, kernel-independent, singular/near-singular quadrature scheme for elliptic boundary value problems in \threed on complex geometries defined by piecewise tensor-product polynomial surfaces.
+%We detailed fast algorithms to enforce geometric conditions that ensure accurate singular/near-singular integration throughout the domain.
+The primary advantage of our approach is \textit{algorithmic simplicity}: the algorithm can implemented easily with an existing smooth quadrature rule, a point \fmm and \oned and \twod interpolation schemes.
+%We presented an error heuristic to trigger upsampling adaptively that incorporates varied surface curvature and is free of Newton iterations.
+We presented fast geometry processing algorithms to guarantee accurate singular/near-singular integration, adaptively upsample the discretization and query local surface patches.
+We then evaluated \qbkix in various test cases, for Laplace, Stokes, and elasticity problems on various patch-based geometries and compared our approach with \cite{YBZ}.
+
+\cite{lu2019scalable} demonstrates a parallel implementation of \qbkix, but the geometric preprocessing and adaptive upsampling algorithms presented in \cref{sec:algo} are not parallelized.
+This is a requirement to solve truly large-scale problems that exist in engineering applications.
+Our method can also be easily restructured as a local method.
+The comparison in \cref{sec:results-compare} highlights an important point: a local singular quadrature method can outperform a global method for moderate accuracies, \textit{even when the local scheme is asymptotically slower}.
+This simple change can also dramatically improve both the serial performance and the parallel scalability of \qbkix shown in \cite{lu2019scalable}, due to the decreased communication of a smaller parallel \fmm evaluation.
+The most important improvement to be made, however, is the equispaced extrapolation.
+Constructing a superior extrapolation procedure, optimized for the boundary integral context, is the main focus of our current investigations.
+
+\section{Acknowledgements}
+We would like to thank Michael O'Neil, Dhairya Malhotra, Libin Lu, Alex Barnett, Leslie Greengard, Michael Shelley for insightful conversations, feedback and suggestions regarding this work. 
+We would also like to thank the NYU HPC team, and Shenglong Wang in particular, for great support throughout the course of this work.
+This work was supported by NSF grant DMS-1821334.
+
