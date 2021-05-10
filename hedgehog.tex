@@ -1,15 +1,20 @@
-\section{Quadrature Algorithms}
-\subsection{Hedgehog Algorithm}
-\todo{add section 3 of solver paper here}
-\input{hedgehog/algorithms.tex}
-\section{Parallel Quadrature Algorithms}
-\subsection{Geometry Distribution among Processors}
-\subsection{Parallel Geometry Refinement}
-\subsection{Parallel Quadrature}
-\subsection{Parallel Closest Point and Marking Algorithm}
-\todo{add relevant sections of SC paper here}
 
+This chapter introduces a simple, high-order boundary solver for elliptic partial differential equations (\pdes) in \threed complex geometries called \qbkix.
+It is based on the work \cite{morse2020robust} with Abtin Rahimian and Denis Zorin.
+
+Boundary integral equation methods have many computational advantages over conventional approaches, but the necessity of evaluating singular/near-singular integrals remains a complicated challenge.
+The main contribution of \qbkix is its algorithmic simplicity.
+The singular/near-singular quadrature scheme decouples quadrature evaluation from the regularization required to accurately evaluate layer potentials.
+\qbkix only requires values of the solution at points, which can be computed with a standard point \fmm.
+This overcomes a key hurdle in the development of fast singular quadrature methods.
+
+This elliptic \pde solver ultimately allows us to solve Laplace, Stokes and linear elasticity equations in complex geometries.
+As will see in the next chapter, by assuming that the fluid flowing through capillaries behaves like a Stokesian fluid, we can leverage \qbkix as a building block in a large scale blood flow simulation.
+
+\input{hedgehog/intro.tex}
+\input{hedgehog/formulation.tex}
+\input{hedgehog/algorithms.tex}
 \input{hedgehog/error}
 \input{hedgehog/complexity}
 \input{hedgehog/results}
-\section{Conclusion}
+\input{hedgehog/conclusion}

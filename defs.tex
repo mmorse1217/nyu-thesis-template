@@ -70,7 +70,9 @@
 % Tikz
 \usepackage{tikz,pgf}
 \usetikzlibrary{matrix,arrows,positioning,calc,fit,backgrounds}
-\usepackage{pgfplots}
+\usetikzlibrary{external}
+\usetikzlibrary{patterns}
+\usepackage{pgfplots,import,tkz-euclide}
 
 % To control enum item labelling/numbering
 \usepackage[shortlabels, inline]{enumitem}
@@ -257,6 +259,7 @@
 % Paper specific macros & commands
 % ----------------------------------------
 
+%% hedgehog defs
 \usepackage{cleveref}
 \usepackage[linesnumbered,lined,ruled,vlined,commentsnumbered]{algorithm2e}
 
@@ -288,7 +291,127 @@
                    {\caption[#1]{{\sc #2.} \newline\small{#3} \label{#1}}}
         }
 
+%% bloodflow defs
+\def\rbc{\abbrev{RBC}\xspace}
+\def\cc{\abbrev{CC}\xspace}
+\def\rbcs{\abbrev{RBC}s\xspace}
+\def\cpu{\abbrev{CPU}\xspace}
+\def\gpu{\abbrev{GPU}\xspace}
+\def\mpi{\abbrev{MPI}\xspace}
+\def\li{\abbrev{LI}\xspace}
+\def\gi{\abbrev{GI}\xspace}
+\def\gir{\abbrev{RGI}\xspace}
+\def\lic{\abbrev{CLI}\xspace}
+\def\lcp{\abbrev{LCP}\xspace}
+\def\lcps{\abbrev{LCP}s\xspace}
+\def\ncp{\abbrev{NCP}\xspace}
+\def\stiv{\abbrev{STIV}\xspace}
+\def\p4est{\texttt{p4est}\xspace}
+\def\id{\abbrev{ID}\xspace}
+\def\ib{\abbrev{IB}\xspace}
+\def\lb{\abbrev{LB}\xspace}
+\def\dpd{\abbrev{DPD}\xspace}
+\def\sph{\abbrev{SPH}\xspace}
+\def\skx{\abbrev{SKX}\xspace}
+\def\knl{\abbrev{KNL}\xspace}
+%\def\sdc{\abbrev{SDC}\xspace}
+\newcommand\sdc[1][]{\abbrev{SDC\ifthenelse{\isempty{#1}}{}{\kern 1pt}#1}\xspace}
+\def\emdash/{\kern 0.2em---\kern 0.2em}
 
+\newcommand\para[1]{\paragraph*{#1}}
+\newcommand\lh[1]{\emph{#1}}           % line heading, useful for itemized
+
+\newcommand\mathbfsf[1]{\bm{\mathsf{#1}}}
+\newcommand\vectord[1]{\mathbfsf{#1}}
+
+\newcommand\vB{\vector{B}}
+\newcommand\vxd{\vectord{x}}
+\newcommand\vXd{\vectord{X}}
+\newcommand\vY{\vector{Y}}
+\newcommand\vYd{\vectord{Y}}
+\newcommand\va{\vector{a}}
+\newcommand\vb{\vector{b}}
+\newcommand\vf{\vector{f}}
+\newcommand\vfd{\vectord{f}}
+\newcommand\vF{\vectord{F}}
+
+\newcommand\dt{\ensuremath{\Delta t}}
+
+\newcommand\slyr{single-layer\xspace}
+\newcommand\dlyr{double-layer\xspace}
+\newcommand\ns{near-singular\xspace}
+\newcommand\gl{Gauss--Legendre\xspace}
+\newcommand\bc{boundary condition\xspace}
+
+\definecolor{clr1}{RGB}{255, 246, 39}
+\definecolor{clr2}{RGB}{124, 22, 28}
+\definecolor{clr3}{RGB}{84, 170, 25}
+\definecolor{clr4}{RGB}{137, 230, 251}
+\definecolor{clr5}{RGB}{226, 49, 39} %red
+\definecolor{clr6}{RGB}{12, 59, 136}
+\definecolor{clr7}{RGB}{53, 120, 120}
+\definecolor{clr8}{RGB}{50, 49, 70}
+\definecolor{clr9}{RGB}{255, 0, 255}
+\definecolor{clr10}{RGB}{0, 0, 255}
+\definecolor{clr11}{RGB}{255, 122, 122}
+
+\definecolor{clr12}{RGB}{130, 130, 130}
+\definecolor{clr13}{RGB}{180, 180, 180}
+\definecolor{clr14}{RGB}{230, 230, 230}
+\definecolor{plt-blue}{rgb}{0.0078,0.2980,0.7961}%blue
+\definecolor{plt-orange}{rgb}{1.0000,0.6431,0.2627}%orange
+\definecolor{plt-purple}{rgb}{1.0000,0.2863,0.5255}%purple
+\definecolor{plt-violet}{rgb}{0.6118,0.1765,1.0000}%violet
+
+\usepackage[export]{adjustbox}  % adjustment boxes in floats
+\pgfplotsset{compat=newest}
+\usepgfplotslibrary{fillbetween}
+\usetikzlibrary{arrows.meta}
+\usetikzlibrary{backgrounds}
+\usetikzlibrary{pgfplots.groupplots}
+\usetikzlibrary{plotmarks}
+
+\newif\ifPlotTikz
+\PlotTikztrue
+%
+\ifPlotTikz
+\pgfplotsset{compat=newest}
+\usepgfplotslibrary{fillbetween}
+\usetikzlibrary{arrows.meta}
+\usetikzlibrary{backgrounds}
+\usetikzlibrary{pgfplots.groupplots}
+\usetikzlibrary{plotmarks}
+
+\pgfplotsset{plot coordinates/math parser=false}
+\pgfkeys{/pgf/images/include external/.code=\includegraphics{#1}}
+\tikzexternalize[prefix=figs/]
+%\tikzset{external/export=false}%disable externalization
+
+\newcommand{\includepgf}[2][1]{
+\beginpgfgraphicnamed{#2}%
+\tikzsetnextfilename{external-#2}%
+\scalebox{#1}{\subimport{figs/}{#2.pgf}}%
+\endpgfgraphicnamed%
+}
+
+%%disable hyperref in tikz figures
+\makeatletter
+\tikzset{
+    every picture/.style={
+        execute at begin picture={
+            \let\ref\@refstar
+        }
+    }
+}
+\makeatother
+%
+\else%for ifPlotTikz
+%
+\newcommand{\includepgf}[2][1]{
+\scalebox{#1}{\includegraphics[]{external-#2}}%
+}
+%
+\fi%for ifPlotTikz
 %%% Local Variables:
 %%% mode: latex
 %%% TeX-master: "thesis"

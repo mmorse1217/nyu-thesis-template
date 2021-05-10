@@ -1,0 +1,257 @@
+
+
+\section{Boundary Solver\label{sec:solver}}
+
+The main challenge in incorporating prescribed flow boundary conditions
+$\vector g$ on the domain boundary $\Gamma$ is the approximation and
+solution of the boundary integral problem
+\cref{eq:double_layer_int_eq}. Upon spatial discretization, this is an
+extremely large, dense linear system that must be solved at every time
+step due to the changing free space solution $\vu^{\text{fr}}$ on the right hand side. Since we aim at a scalable
+implementation, we do not assemble the operator on the left hand side
+but only implement the corresponding matrix-vector multiplication, i.e., its application to
+vectors. Combined with an iterative solver such as \gmres, this matrix-vector multiply is sufficient to solve
+\cref{eq:double_layer_int_eq}. Application of the double-layer
+operator $D$ to vectors amounts to a near-singular quadrature for
+points close to $\Gamma$. Controlling the error in this computation
+requires a tailored quadrature scheme. This scheme is detailed below,
+where we put a particular emphasis on the challenges due to our 
+parallel implementation.
+
+
+
+\subsection{Quadrature for integral equation}
+%\subsection{Solving for the boundary velocity}
+
+The domain boundary $\Gamma$ is given by a collection of
+non-overlapping patches $\Gamma = \bigcup_i P_i(Q)$, where $P_i:Q
+\rightarrow \mathbb{R}^3$ is defined on $Q=[-1,1]^2$.  We use the
+Nystr\"om discretization for \cref{eq:double_layer_int_eq}.  Since $D(\vx,\vy)$
+is singular, this requires a singular quadrature scheme for the integral on the
+right-hand side.
+We proceed in several steps, starting with the direct non-singular
+discretization, followed by a distinct discretization for the
+singular and near-singular case.
+
+\textbf{Non-singular integral quadrature. }
+We discretize the integral in \cref{eq:double_layer_int_eq}, for $\vx
+\not\in \Gamma$, by rewriting it as an integral over a set of
+patches and then
+%\begin{equation}
+%  \int_\Gamma D(\vx, \vy) \phi(\vy) d\vy_\Gamma = \sum_i \int_{P_i}D(\vx, \vy) \phi(\vy)d\vy_{P_i} 
+%  \label{eq:double_layer_int_eq_patches}
+%\end{equation}
+apply a tensor-product $q$th order Clenshaw-Curtis rule to each patch:
+\begin{equation}
+ \!\!\vu(\vx) = \sum_i\!\int_{P_i}D(\vx, \vy) \phi(\vy)d\vy_{P_i} \approx \sum_i \!\sum_{j=0}^{q^2} D(\vx,\vy_{ij}) w_{ij}  \phi(\vy_{ij}),
+  \label{eq:smooth_double_layer_int_eq_patches_disc}
+\end{equation}
+where $\vy_{ij} = P_i(\vector{t}_j)$ and $\vector{t}_j\in[-1,1]^2$ is
+the $j$th quadrature point and $w_{ij}$ is the
+corresponding quadrature weight.
+We refer to the points $\vy_{ij}$ as the \textit{coarse discretization
+  of\, $\Gamma$} and 
+introduce a single global index $\vy_{\ell} = \vy_{ij}$ with $\ell
+= \ell(i,j) = (i-1)q^2 + j$, $\ell = 1, \ldots, N$, where $N$ is the total number of quadrature nodes.
+We can then rewrite the right-hand side of \eqref{eq:smooth_double_layer_int_eq_patches_disc} compactly as the vector dot product $W(\vx) \cdot \phi$, where  $\phi_\ell = \phi(\vy_\ell)$ and $W_\ell(\vx) = D(\vx,\vy_\ell)w_\ell$ are the quadrature weights in \cref{eq:smooth_double_layer_int_eq_patches_disc}.
+
+%we obtain a linear system for the unknown density $\phi$, sampled at the discretization nodes:
+%\begin{equation}
+%  \left(\frac{1}{2}I + A\right) \phi = f, \quad A_{\ell m} = D(\vy_\ell,\vy_m), \quad 1 \leq \ell,m \leq N
+%  \label{eq:int_eq_disc}
+%\end{equation}
+%where $D(\vx,\vy)$ is the double-layer Green's function of the Stokes equation, and $N$ is the total number of quadrature nodes.
+As $\vx \to \Gamma$ for $\vx\in \Omega$, the integrand becomes more singular 
+and the accuracy of this quadrature rapidly decreases due
+to the singularity in the kernel $D$. This requires us to
+construct a singular integral discretization for $\vx = \vy_\ell$,
+$\ell=1,\ldots ,N$, and general points on $\Gamma$, which is discussed
+next. Note that the same method is
+used for evaluation of the velocity values at points close to the
+surface, once the equation is solved (\emph{near-singular
+  integration}).
+
+\textbf{Singular and near-singular integral quadrature. }
+%the integral at points $\vx = \vy_m$, $m =1\ldots N$. 
+%using an iterative solver like \abbrev{GMRES}.
+%However, despite the fact that \cref{eq:double_layer_int} is well-defined in the principal value sense \cite{Kress1999}, if $\vy_m \to \vy_\ell$, \cref{eq:double_layer_int_eq_patches_disc} becomes more singular.
+%This is a purely numerical phenomenon that requires a special numerical singular integration.
+\begin{figure}[h]
+\centering
+\begin{minipage}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[angle=0,width=.75\linewidth]{figs/qbkix_schematic_stage5.png}
+  \mcaption{fig:hedgehog-schematic}{}{Schematic of our unified
+    singular/near-singular quadrature scheme.
+    A boundary $\Gamma$ is shown along with a set of patches (patch edges shown in black).
+    We evaluate the velocity due to $\Gamma$ at the check points (gray dots off-surface) using the fine discretization (small dots on-surface) and extrapolate these values to the target point (green). 
+    The target point may be on or near $\Gamma$.
+    The fine discretization subdivides the patches in the coarse discretization into $16$ patches, each with an $11$th-order tensor-product Clenshaw-Curtis quadrature rule.
+}
+\end{minipage}
+\end{figure}
+We take an approach similar to \cite{klockner2013quadrature}.
+The idea is to evaluate the integral sufficiently far from the surface using the non-singular quadrature rule
+\eqref{eq:smooth_double_layer_int_eq_patches_disc} on an upsampled mesh, and then
+to extrapolate the accurate values towards the surface.
+%
+Concretely, to compute the singular integral at a point $\vx$ near or on
+$\Gamma$, we use the following steps:
+%(i.e., evaluate \cref{eq:double_layer_int}):
+\begin{enumerate}
+  \item Upsample $\phi$ using $q$th order
+    interpolation, i.e., $\phi^\lbl{up} = U\phi$, where $\phi^\lbl{up}$ is
+    the vector of $Nk$ samples of the density and
+    $U$ is the interpolation operator.
+    % from values at $N$ samples to values $Nk$ samples.
+    To be precise, we subdivide each patch $P_i$ into $k$ square
+    subdomains $P_{ik}$ and use Clenshaw-Curtis nodes in each subdomain.
+    We subdivide uniformly, i.e., $P_i$ is split into
+    $k=4^\eta$ patches for an integer $\eta$.
+    This is the \textit{fine discretization of \,$\Gamma$}. 
+    We use $W^\lbl{up}$ to denote the weights for
+    \cref{eq:smooth_double_layer_int_eq_patches_disc} the fine discretization quadrature points.
+    
+  \item Find the closest point $\vy = P(u^*,v^*)$ to $\vx$ on $\Gamma$ for some
+  patch $P$ on $\Gamma$ with $u^*,v^*\in [-1,1]$ ($\vy = \vx$ if $\vx \in \Gamma$). 
+\item Construct \emph{check points} $c_q =c_q(\vx) = \vy -(R + ir) \vn(u^*,v^*) $,
+  $i=0,\ldots, p$, where $\vn(u,v)$ is the outward normal vector to $\Gamma$ at $P(u,v)$. 
+%    Then we interpolate $\phi$ from the coarse discretization to the fine discretization using a \twod barycentric interpolation formula.
+%  \item Evaluate the velocity at the check points using the fine discretization:
+%\begin{equation}
+%  \sum_i \sum_k\int_{P_{ik}}D(\vx, \vy) \phi(\vy)d\vy_{P_{ik}} \approx \sum_i \sum_k\sum_{j=0}^{q^2} D(\vx,P_{ik}(\vector{t}_j)) \phi(P_{ik}(\vector{t}_j))w_{ij} 
+%  \label{eq:double_layer_int_eq_patches_disc}
+    %\end{equation}
+  \item Evaluate the velocity at the check points:
+    \begin{equation}
+      \vu(c_q(\vx)) \approx W^\lbl{up}(c_q)\cdot\phi^{\text{up}},\quad i=0,\ldots, p.
+      \label{eq:quad_check_points}
+    \end{equation}
+  \item Extrapolate the velocity from the check points to $\vx$ with \abbrev{1D} polynomial extrapolation: 
+    \begin{align}
+      \vu(\vx) \approx& \sum_q e_q \vu(c_q(\vx)) = \left(\sum_q e_q W^\lbl{up}(c_q))\right) U \phi \label{eq:sing-quad}\\
+      &= W^\lbl{s}(\vx) \cdot \phi,
+    \end{align}      
+where $e_q$ are the extrapolation weights.
+\end{enumerate}
+In this work, the parameters $R,p,r$ and $\eta$ are chosen empirically
+%\note[MJM]{how to choose parameters, empircally?}
+to balance the
+error in the accuracy of $W^{\text{up}}(c_q) \cdot
+\phi^{\text{up}}$ and the extrapolation to
+$\vx$. A schematic of this quadrature procedure is shown in
+\cref{fig:hedgehog-schematic}.
+%An in-depth discussion of the choice of these parameters can be found in a forthcoming paper.
+
+\textbf{Discretizing the integral equation. }
+ With the singular integration method described above, we take $\vx = \vy_\ell$, $\ell = 1\ldots N$, and obtain
+the following discretization of \cref{eq:double_layer_int_eq}:
+\begin{equation}
+  \left(\frac{1}{2}I + A\right) \phi = \vg, \quad A_{\ell m} =
+  W_m^\lbl{s}(\vy_\ell) + N_{ij},
+  \label{eq:int_eq_disc}
+\end{equation}
+where $\vg$ is the boundary condition evaluated at
+$\vy_\ell$, $W^s_m(\vx)$ is the $m$th component of $W^s(\vx)$ and $N_{ij}$ is the appropriate element of the rank-completing
+operator in \cref{eq:double_layer_int_eq}.
+
+The dense operator $A$ is never assembled explicitly.
+We use \gmres to solve \cref{eq:int_eq_disc}, which only requires
+application of $A$ to vectors $\phi$.
+This matrix-vector product is computed using the steps summarized above. 
+
+Extrapolation and upsampling are local computations that are parallelized trivially if all degrees of freedom for each patch are on a single processor.
+The main challenges in parallelization of the above singular
+evaluation are 1) initially distributing the patches among processors,
+2) computing the closest point on $\Gamma$ and 3) evaluating the
+velocity at the check points. The parallelization of these
+computations is detailed in the remainder of this section.
+
+\textbf{Far evaluation. }
+To compute the fluid velocity away from $\Gamma$, where
+\cref{eq:double_layer_int_eq} is non-singular, i.e., at the check
+points, the integral can be directly evaluated using
+\cref{eq:smooth_double_layer_int_eq_patches_disc}. 
+%
+Observing that \cref{eq:smooth_double_layer_int_eq_patches_disc} has the form
+of an $N$-body summation, we use the \textit{fast-multipole method}
+\cite{greengard1987fast} to evaluate it for all target points at once. 
+We use the parallel, kernel-independent implementation Parallel Volume Fast Multipole Method (\pvfmm) \cite{malhotra2015,malhotra2016algorithm}, which has been demonstrated to scale to hundreds of thousands of cores. 
+\pvfmm handles all of the parallel communication required to aggregate
+and distribute the contribution of non-local patches in $O(N)$ time. 
+%Since this $N$-body sum is the botteneck of the singular evaluation and thus the boundary solver, we present scaling results for \pvfmm on Stampede2 in \cref{sec:results}.
+%\note[MJM]{possibly delete?}
+
+\subsection{Distributing geometry and evaluation parallelization}
+
+We load pieces of the blood vessel geometry, which is provided as a
+quad mesh, separately on different processors. Each face of the 
+mesh has a corresponding polynomial $P_i$ defining the $i$th patch.
+
+The $k$ levels of patch subdivision induce a uniform quadtree structure within each quad.
+%each leaf defines the partition of $[-1,1]^2$ to discretize with a tensor-product quadrature rule.
+We use the \p4est library \cite{BursteddeWilcoxGhattas11} to manage
+this surface mesh hierarchy, keep track of neighbor information,
+distribute patch data and to refine and coarsen the discretization in
+parallel.  
+%This functionality can also be extended 
+%to implement adaptive refinement as presented in \cite{solver}; 
+The parallel quadtree algorithms provided by \p4est are used to
+distribute the geometry without replicating the complete surface and
+polynomial patches across all processors.
+\p4est also determines parent-child patch relationships between the coarse and fine discretizations and the coordinates of the child patches to which we interpolate.
+
+Once the geometry is distributed, constructing check points, all necessary information for upsampling and extrapolation are either available on each processor or communicated by \pvfmm. 
+This allows these operations to be embarassingly parallel.
+  
+\subsection{Parallel closest point search}
+\label{sec:closest_point}
+To evaluate the solution at a point $\vx$, we must find the closest point $\vy$
+on the boundary to $\vx$.
+The distance $\|\vx -\vy\|_2$ determines whether or not near-singular
+integration is required to compute the velocity at $\vx$.
+If it is, $\vy$ is used to construct check points. 
+
+In the context of this work, the point $\vx$ is on the surface of an \rbc, which
+may be on a different processor than the patch containing $\vy$.
+This necessitates a parallel algorithm to search for $\vy$.
+%
+%However, since $\Gamma$ is represented as a set of distributed patches, the closest patch to $\vx$ might reside on a different process  $\vx$.
+% 
+%We want to perform this computation efficiently and quickly reject points that do not require singular integration.
+For that purpose, we extend the spatial sorting algorithm from \cite[Algorithm 1]{lu2018parallel} to support our fixed patch-based boundary and detect near pairs of target points and patches.
+
+\begin{enumerate}[a.]
+  %1
+  \item\label{step:bbnear} \textit{Construct a bounding box $B_{P,\eps}$ for the near-zone of each patch.} 
+    We choose a distance $d_\eps$ so that for all points $\vz$ further away than $d_\eps$
+    from $P$, the quadrature error of integration over $P$ is bounded by $\eps$.
+    The set of points closer to $P$ than $d_\eps$ is the \textit{near-zone of
+    }$P$.
+    We inflate the bounding box $B_P$ of $P$ by $d_\eps$ along the diagonal to
+    obtain $B_{P,\eps}$ to contain all such points.
+  \item\label{step:computeid} \textit{Sample $B_{P,\eps}$ and compute
+    a spatial hash of the samples and $\vx$.}
+    Let $H$ be the average diagonal length of all $B_{P,\eps}$.
+    We sample the volume contained in $B_{P,\eps}$ with equispaced samples of spacing $h_P < H$.
+    Using a spatial hash function, (such as Morton ordering with a spatial grid
+    of spacing $H$), we assign hash values to bounding box samples and $\vx$
+    to be used as a sorting key.
+    This results in a set of hash values that define the near-zone of $\Gamma$.
+    %3
+  \item\label{step:sort} \textit{Sort all samples by the sorting key}. Use the
+    parallel sort of \cite{Sundar2013} on the sorting key of bounding box samples and that of $\vx$. 
+    This collects all points with identical sorting key (i.e., close positions) and places them on the same processor.    
+    If the hash of $\vx$ matches the hash of a bounding box sample,
+    then $\vx$ could require near-singular integration, which we check explicitly.
+    Otherwise, we can assume $\vx$ is sufficiently far from $P$ and does not require singular integration.
+    %4
+  \item\label{step:distance} \textit{Compute distances $\|\vx - P_i\|$.} For
+    each patch $P_i$ with a bounding box key of $\vx$, we locally solve the minimization problem $\min_{(u,v) \in [-1,1]^2} \|\vx - P_i(u,v)\|$ via Newton's method with a backtracking line search.
+    This is a local computation since $\vx$ and $P_i$ were communicated during the Morton ID sort.
+    %5
+  \item\label{step:closest} \textit{Choose the closest patch $P_i$}. We perform a global reduce on the distances $\|\vx - P_i\|$ to determine the closest $P_i$ to $\vx$ and communicate back all the relevant information required for singular evaluation back to $\vx$'s processor.
+\end{enumerate}
+
+%Steps \ref{step:computeid} and \ref{step:sort} are similar in spirit to \cite[Algorithm 1]{lu2018parallel} and used in the same fashion in \cref{sec:parallel-contact}.
+

@@ -1,1 +1,26 @@
-\input{hedgehog/intro}
+Microscale particulate flows play a pivotal role in many biophysical settings.
+In particular, blood flows through vasculature can be modeled with reasonable accuracy by a collection of deformable particles called \textit{vesicles} suspended in a Newtonian fluid.
+A clear understanding blood circulation through capillaries would shed light on important yet complex phenomena such as vasodilation, vasoconstriction, thrombosis and clotting.
+The ability to simulate such flows with modern computers would provide a means to computationally investigate these phenomena with an unprecidented level of control and resolution and is a crucial milestone in the pursuit of the next generation of biological advances.
+
+The tools required for blood flow simulation can also be applied in other biological settings.
+Deterministic lateral displacement microfluidic chips are able to sort particles suspended in a fluid flow by varying the geometry of a collection of pillars tiling the length of the device.
+By simulating such a device, one can optimize the device shape and expensive trial-and-error through manufacturing \cite{kabacaouglu2019sorting}.
+Intra-cellular dynamics of organelles \cite{nazockdast2017cytoplasmic}
+
+\subsection{Challenges}
+ - accuracy
+ - robustness
+ - serial and parallel scalability
+
+simulation of fluid flow in complex geometries
+
+robust parallel scaling of rbc simulations
+\subsection{Overall Approach}
+boundary integral?
+\subsection{Summary of Thesis}
+In \cref{chp:hedgehog}, we will present a fast high order, boundary solver for elliptic partial differenetial equations (\pdes) in \threed complex geometries. 
+
+In \cref{chp:bloodflow}, we apply the boundary solver of \cref{chp:hedgehog} to 
+C2 is high order boundary solver
+C3 is parallel blood flow simulation

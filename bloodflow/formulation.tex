@@ -1,0 +1,260 @@
+
+\section{Formulation and solver overview\label{sec:formulation}}
+
+%\subsection{notation}
+\subsection{Problem summary}
+
+
+We simulate the flow of $N$ cells with deformable boundary surfaces
+$\gamma_i$, $i=1,\ldots,N$ in a viscous Newtonian fluid in a domain
+$\Omega\subset\mathbb R^3$ with a fixed boundary $\Gamma$. The governing
+partial differential equations (PDEs) describing the conservation of
+momentum and mass are the incompressible Stokes equations for the
+velocity $\vu$ and pressure $p$, combined with velocity boundary
+conditions on $\Gamma$.  Additionally, we model cell membranes as massless, so the
+velocity $\vXd_t$ of
+the points on the cell surface  coincides with the flow velocity:
+%
+\begin{align}
+  -\mu \Delta \vu(\vx) + \nabla p(\vx) = \vF(\vx) \quad \mathrm{and}\quad \nabla \cdot \vu(\vx) = 0, \quad \vx \in \Omega, 
+  \label{eq:stokes_diff1} \\
+  \vu(\vx) = \vector g(\vx), \quad \vx \in \Gamma,
+  \label{eq:stokes_diff2}  \\
+  \vXd_t = \vu(\vXd), \quad \vX \in \gamma_i(t),
+  \label{eq:stokes_diff3}  
+\end{align}
+where $\mu$ is the viscosity of the ambient fluid; in our simulations, we use a simplified model with
+the viscosity of the fluid inside the cells also being $\mu$ although
+our code supports arbitrary viscosity contrast.  The right-hand side
+force in the momentum equation is due to the sum of tension and
+bending forces $\vfd = \vfd_\sigma + \vfd_b$; it is concentrated on
+the cell surfaces. We assume that cell surfaces are  inextensible,
+with bending forces determined by the Canham-Helfrich model \cite{canham1970minimum, helfrich1973elastic},
+ based on the surface curvature, and surface tension determined by the surface
+incompressibility condition $\nabla_{\gamma_i} \cdot\vu = 0$ resulting in
+\[
+\vF(\vx) = \sum_i \int_{\gamma_i} \vfd(\vy) \delta(\vx - \vy)d\vy 
+\]
+(see, e.g., \cite{rahimian2015} for the expressions for $\vfd$).
+Except on inflow and outflow regions of the vascular network, the boundary condition $\vector g$ is zero, modeling no-slip boundary condition on blood vessel walls.
+%We additionally assume  no-slip boundary condition on all $\gamma_i$.
+
+\subsubsection{Boundary integral formulation}
+To enforce the boundary conditions on $\Gamma$, we use the standard approach of computing
+$\vu$ as the sum of the solution $\vu^{\text{fr}}$ of the free-space equation  
+\cref{eq:stokes_diff1} without boundary conditions but with non-zero right-hand side $\vF(\vx)$,
+and  the second term  $\vu^{\Gamma}$ obtained by solving the
+homogeneous equation with boundary conditions on $\Gamma$ given by
+$\vector g-\vu^{\text{fr}}$. 
+
+Following the approach of
+\cite{Power1987,Poz92,lu2018parallel,nazockdast2015b}, we reformulate
+\cref{eq:stokes_diff1,eq:stokes_diff2} in the integral form. The
+free-space solution $\vu^{\text{fr}}$ can be written
+directly as the sum of the single-layer Stokes potentials $\vu^{\gamma_i}$:
+
+\begin{equation}
+  \vu^{\gamma_i}(\vx) = (S_i\vfd)(\vx) = \int_{\gamma_i} S(\vx,\vy)
+  \vfd(\vy) d\vy, \quad \vx \in \Omega,
+\label{eq:sl_stokes}
+\end{equation}
+where $S(\vx,\vy) = \frac{1}{8\pi\mu}\left(\frac{1}{\vr} + \frac{\vr \otimes \vr}{|\vr|^3}\right)$ for viscosity $\mu$ and $\vr = \vx - \vy$.
+
+
+To obtain $\vu^\Gamma$, we reformulate the homogeneous volumetric PDE with nonzero boundary conditions
+as a boundary integral equation for an unknown double-layer density $\phi$ defined on the domain boundary $\Gamma$: 
+\begin{equation}
+  \left(\frac{1}{2}I + D + N \right)\phi = \tilde{D}_\Gamma\phi =  \vector g-\vu^{\text{fr}}, \quad \vx \in \Gamma,
+  \label{eq:double_layer_int_eq}\\
+\end{equation}
+where the double-layer operator is $D\phi(\vx) = \int_\Gamma D(\vx,\vy) \phi(\vy) d\vy$ with double-layer Stokes kernel $D(\vx,\vy) = \frac{6}{8\pi}\left(\frac{\vr \otimes \vr}{|\vr|^5}(\vr\cdot\vn\right)$ for outward normal $\vn=\vn(\vy)$.
+The null-space operator needed to make the equations full-rank is defined as
+$(N\phi)(\vx) = \int_\Gamma (\vn(\vx) \cdot \phi(\vy))\vn(\vy) d\vy$ (cf.\ \cite{lu2017}).
+The favorable eigenspectrum of the integral operator in \cref{eq:double_layer_int_eq} is well-known and allows \gmres to rapidly converge to a solution.
+One of the key differences between this work and previous free-space large-scale simulations
+is the need to solve this equation in a scalable way. Once the density $\phi$ is computed,
+the velocity correction $\vu^\Gamma$ is evaluated directly as $\vu^{\Gamma} = D\phi$.
+
+
+
+%= \int_\Gamma D(\vx,\vy) \phi(\vy) d\vy_{\Gamma}, \quad \vx \in \Omega
+% \label{eq:double_layer_int}
+%]
+%$If we can solve \cref{eq:double_layer_int_eq} for $\phi$, we have an
+%analytic expression for $\vu^{\Gamma}(\vx)$.
+
+The  equation for the total velocity $\vu(\vx)$ at any point $\vx \in \Omega$ is then given by
+\begin{equation}
+  \vu = \vu^{\text{fr}} +\vu^\Gamma =  \sum_{i=1}^N \vu^{\gamma_i} + \vu^\Gamma.
+  \label{eq:velocity_combined}
+\end{equation}
+In particular, this determines the update equation for the boundary
+points of cells; see \cref{eq:stokes_diff3}.
+
+%where $\vu^{\gamma_i}$ is the velocity due to $\gamma_i$ and
+%$\vu^{\Gamma}$ is the velocity due to the domain boundary $\Gamma$.
+%The velocity $\vu^{\gamma_i}$ can be written as a sum of single- and double-layer integrals over $\gamma_i$, as detailed in \cite{Veerapaneni2011}.
+
+
+\textbf{Contact formulation \label{sec:contact-vol}. }
+In theory, the contacts between surfaces are prevented by the increasing fluid forces as surfaces approach each other closely. However, ensuring accuracy of resolving forces may require prohibitively fine sampling of surfaces and very small time steps, making large-scale simulations in space and time impractical. At the same time, as shown in \cite{lu2017}, interpenetration of surfaces results in a catastrophic loss of accuracy due to singularities in the integrals. 
+
+To guarantee that our discretized cells remain interference-free,
+we augment \cref{eq:stokes_diff1,eq:stokes_diff2} with an explicit
+inequality constraint preventing collisions.  We define a vector
+function $V(t)$ with components becoming strictly negative if any cell
+surfaces intersect each other, or intersect with the vessel boundaries
+$\Gamma$.  More specifically, we use the \emph{space-time interference volumes} introduced in \cite{Harmon2011} and applied to 3D cell flows in \cite{lu2018parallel}.
+Each component of $V$ corresponds to a single connected overlap.
+The interference-free constraint at time $t$ is then simply $V(t) \geq 0$. 
+
+For this constraint to be satisfied, the forces $\vfd$ are augmented by an artificial collision
+force, i.e.,  $\vfd = \vfd_b + \vfd_\sigma + \vfd_c$, $\vfd_c =
+\nabla_u V^T \lambda$, where $\lambda$ is the vector of Lagrange
+multipliers, which is determined by the additional
+\emph{complementarity} conditions:
+\begin{equation}
+  \lambda(t) \geq 0, \quad V(t) \geq 0, \quad \lambda(t) \cdot V(t) = 0,
+%  0 \leq \lambda \quad \bot \quad V(t) \geq 0,
+  \label{eq:complementarity_prob}
+\end{equation}
+ at time $t$, where all inequalities are to be understood component-wise.
+
+ To summarize, the system that we solve at every time step can be
+ formulated as follows, where we separate equations for different
+ cells and global and local parts of the right-hand side, as it is
+ important for our time discretization:
+%
+%
+\begin{align}
+  &\vX_t =  \left(\sum_{j\neq i} S_j \vfd_j  + D \phi\right) +  S_i \vfd_i, \quad \mbox{for points on $\gamma_i$},
+  \label{eq:constrained-all1}\\
+  &\nabla_{\gamma_i} \cdot \vX_t = 0,\quad    \vfd_j = \vfd(\vX_j,\sigma_j,\lambda),
+  \label{eq:constrained-all2} \\
+  &B_\Gamma \phi =  \vector g-\sum_{j} S_j \vfd_j, \quad \mbox{for points on $\Gamma$},
+  \label{eq:constrained-all3} \\
+   &\lambda(t) \geq 0, \quad V(t) \geq 0, \quad \lambda(t) \cdot V(t) = 0.
+  \label{eq:constrained-all4}
+\end{align}
+
+ At every time step, \eqref{eq:constrained-all4} results in 
+coupling of all close $\gamma_i$'s, which requires a non-local computation. 
+We follow the approach detailed in \cite{lu2018parallel, lu2017} to define and solve
+the \textit{nonlinear complementarity problem} (\ncp) arising from cell-cell
+interactions in parallel, and extend it to prevent intersection of cells
+with the domain boundary $\Gamma$, as detailed in \cref{sec:parallel-contact}.
+
+
+\subsection{Algorithm Overview\label{sec:alg_overview}}
+
+Next, we summarize the algorithmic steps used to solve the constrained
+integral equations needed to compute cell surface positions and fluid velocities
+at each time step.  In the subsequent sections, we detail the
+parallel algorithms we developed to obtain good weak and strong scalability, as shown
+in \cref{sec:results}.
+
+
+\textbf{Overall Discretization. } 
+\rbc surfaces are discretized using a spherical harmonic
+representation, with surfaces sampled uniformly in the standard
+latitude-longitude sphere parametrization. The blood vessel surfaces $\Gamma$ are
+discretized using a collection of high-order tensor-product polynomial
+patches, each sampled at Clenshaw-Curtis quadrature points. The
+space-time interference volume function $V(t)$ is computed using a
+piecewise-linear approximation as described in \cite{lu2018parallel}.
+For time discretization, we use a locally-implicit first order
+time-stepping (higher-order time stepping can be easily incorporated).
+Interactions between \rbcs and the blood vessel surfaces are computed
+\textit{explicitly}, while the self-interaction of a single \rbc is
+computed \textit{implicitly}.
+
+The state of the system at every time step is given by a triple of distributed
+vectors $(\vX,\sigma, \lambda)$. The first two (cell surface positions and tensions)
+are defined at the discretization points of cells. The vector $\lambda$ has variable
+length and corresponds to connected components of collision volumes. 
+We use the subscript $i$ to denote the subvectors corresponding to $i$-the cell.
+$\vX$ and $\sigma$ are solved as a single system that includes the incompressibility
+constraint \cref{eq:constrained-all2}.
+To simplify exposition, we omit $\sigma$ in our algorithm summary,  which corresponds to
+dropping $\vfd_\sigma$  in the Stokes equation, and dropping the surface incompressibility
+constraint equation. 
+
+\textbf{Algorithm summary. }
+%Let $\vX_i$ and $\vfd_i'$ be the  positions and total forces associated
+%with the $\gamma_i$ computed at the current time step (note at $t=0$, $\vf_c=0$)
+At each step $t$, we compute the new positions $\vX^+_i$ and collision Lagrange multipliers
+$\lambda^+$ at time $t^+=t+\Delta t$.  We assume that in the initial configuration there are no collisions,
+so the Lagrange multiplier vector $\lambda$ is zero.  Discretizing in
+time,
+\cref{eq:constrained-all1} becomes
+%
+\[ \vX^+_i =  \vX_i + \Delta t\left(\sum_{j\neq i} S_j
+\vfd_j(\vX_j,\lambda)  + D \phi(\vX_j, \lambda)\right) +  \Delta t S_i \vfd_i(\vX^+_i, \lambda^+).
+\]
+
+%To compute $\vu(\vx_i)$, the fluid velocity on
+%$\gamma_i$, we perform the following steps:
+
+At each single time step, we perform the following steps to obtain $(\vX^+, \lambda^+)$ from $(\vX, \lambda)$. Below evaluation of integrals implies using appropriate (smooth, near-singular or singular) quadrature rules on cell or blood vessel surfaces. 
+
+\begin{enumerate}
+
+\item
+  Compute the explicit part $\vb$ of the position update (first term in \cref{eq:constrained-all1}).
+  \begin{enumerate}
+  \item \label{step:rbc_velocity}
+    Evaluate $\vu^\lbl{fr}$ from $(\vX, \lambda)$  on $\Gamma$  with
+    \cref{eq:sl_stokes}.
+  \item\label{step:boundary_solve} Solve \cref{eq:double_layer_int_eq} for the unknown density $\phi$ on $\Gamma$ using GMRES.
+  \item\label{step:boundary_evaluate} For each cell, evaluate  $\vu^\Gamma_i = D\phi$ at all cell points $\vX_i$.
+  \item\label{step:inter_rbc_evaluate} For each cell $i$, compute the contributions of
+    other cells to $\vX_i^+$:  $\vb^c_i = \vu^\lbl{fr} - u^{\gamma_i} = \sum_{j\neq i}S_j\vfd_j$. 
+  \item Set $\vb_i = \vu^\Gamma_i + \vb^c_i$.
+  \end{enumerate}
+  \item \label{step:solve_ncp} Perform the implicit part of the
+    update: solve the \ncp obtained  by treating the second
+    (self-interaction) term in \cref{eq:constrained-all1} while
+    enforcing the complementarity constraints \cref{eq:complementarity_prob}, i.e., solve
+    \begin{align}
+      \vX^+_i = \vX_i + \Delta t (\vb_i + S_i \vf_i(\vX_i^+,\lambda^+)),\label{eq:ncp1}\\
+      \lambda(t^+) \geq 0, \quad V(t^+) \geq 0, \quad \lambda(t^+) \cdot V(t^+) = 0.\label{eq:ncp2}
+    \end{align}
+\end{enumerate}
+
+\cref{step:rbc_velocity,step:boundary_solve,step:boundary_evaluate,step:inter_rbc_evaluate}
+all require evaluation of global integrals, evaluated as sums over quadrature points;
+we compute these sums in parallel with \pvfmm. In particular,
+\cref{step:boundary_solve} uses \pvfmm as a part of each matrix-vector product in the
+GMRES iteration. These matrix-vector product,
+as well as \cref{step:rbc_velocity,step:inter_rbc_evaluate,step:boundary_evaluate}
+require near-singular integration to compute the velocity accurately
+near \rbc and blood vessel surfaces; this requires parallel
+communication to find non-local evaluation points.
+Details of these computations are discussed
+in \cref{sec:solver}.
+
+The \ncp is solved using a sequence of \textit{linear complementarity problems} (\lcp\/s). Algorithmically, this requires parallel searches of collision candidate pairs and the repeated application of the distributed \lcp matrix to distributed
+vectors. Details of these computations are provided in \cref{sec:parallel-contact}.
+
+\textbf{Other parallel quadrature methods. }
+%\note[MJM]{this is about vesicle quadrature schemes, but it was in the boundary solver section. Reviewer 3 was confused by this, moved here since there is no other discussion of parallel vesicles}
+Various other parallel algorithms are
+leveraged to perform boundary integrals for the vessel geometry and \rbcs.
+%
+To compute $\vu^{\gamma_i}(\vX)$ for $\vX \in \gamma_i$, the schemes
+presented in \cite{Veerapaneni2011} are used to
+achieve spectral convergence for single-layer potentials
+by performing a spherical harmonic rotation and apply the quadrature rule
+of \cite{graham2002fully}.  We use the improved algorithm in
+\cite{Malhotra2017} to precompute the singular integration operator
+and substantially improve overall complexity.
+To compute $\vu^{\gamma_i}(\vX)$ for $\vX$ close to, but not on $\gamma_i$, we follow the
+approaches of \cite{sorgentone2018highly, Malhotra2017}, which use a variation of the high-order near-singular
+evaluation scheme of \cite{Ying2006}.  Rather than extrapolating the
+velocity from nearby check points as in \cref{sec:solver}, we
+use \cite{Veerapaneni2011} to
+compute the velocity on surface, upsampled quadrature on $\gamma_i$ to compute
+the velocity at check points and interpolate the velocity between them to the desired
+location.
+We mention these schemes for the sake of completeness; they are not the primary contribution of this work, but are critical components of the overall simulation.
+

@@ -1,0 +1,138 @@
+\section{Introduction\label{sec:intro}}
+%%
+%% Motivation
+%%
+%\para{Applications and challenges}
+The ability to simulate complex biological flows from first principles
+has the potential to provide  insight into complicated physiological processes. 
+Simulation of blood flow, in particular, is of paramount biological and clinical importance.
+Blood vessel constriction and dilation affects blood pressure, forces between \rbcs can cause clotting, various cells migrate differently through microfluidic devices.
+
+
+However, direct simulation of blood flow is an extremely challenging task.
+Even simulating the blood flow in smaller vessels requires modeling millions of cells (one microliter of blood contains around five million \rbcs) along with a complex blood vessel.
+\rbcs are highly deformable and cannot be well-approximated by rigid particles.
+The volume fraction of cells in human blood flow reaches 45\%, which means that a very large fraction of cells are in close contact with other cells or vessel walls at any given time.
+These constraints preclude a large number of discretization points per cell and make an evolving mesh of the fluid domain impractical and costly at large scale.
+
+Simulations capable of capturing these various types of flows faithfully must be
+\begin{itemize}
+\item \emph{numerically accurate}, to solve the model equations without
+  concern for numerical error;
+\item \emph{robust}, to handle high-volume-fraction flows, close contact between cells and vessel walls, complex geometries, and long simulation times;
+\item \emph{efficient and scalable}, to support a realistic number of cells in
+  flows through complex blood vessels.
+\end{itemize}
+
+Achieving these objectives for a blood flow simulation requires that the system meets a number of stringent requirements.
+While previous work has made significant progress \cite{Malhotra2017,lu2018parallel,rahimian2010petascale}, we focus on several new infrastructure components essential for handling confined flows and arbitrarily long-time, high volume fractions \rbc flows; in particular, our work is able to realize each of these goals.
+
+We formulate the viscous flow in blood vessels as an integro-differential equation and make use of fast scalable summation algorithms for efficient implementation, as in prior \rbc simulations \cite{Veerapaneni2011}. 
+This is the only approach to date that maintains high accuracy at the microscopic level while avoiding expensive discretization of fluid volume: all degrees of freedom reside on the surfaces of \rbcs and blood vessels.
+
+%To achieve high accuracy with few degrees of freedom per cell, and a compact boundary representation, we use spherical harmonic representations for cell boundaries and high-order representations (polynomials patches) for the blood vessels. As in previous work, a semi-implicit time stepping scheme is used. 
+%To achieve high accuracy with minimal degrees of freedom per cell, we required a smooth yet compact boundary representation; we use spherical harmonic representations for cell boundaries and high-order polynomials for the blood vessels. 
+%We update \rbc positions with a semi-implicit time stepping scheme. 
+
+The most important novel aspects of our system include:
+(a) handling the \rbc-blood vessel interaction with a fully parallel, high-order
+boundary integral equation solver;
+(b) explicit handling of collisions with a parallel constraint-based resolution and detection algorithm.
+The former is essential for modeling confined flows, while the latter is essential for handling high-volume fraction flows at long time scales without excessively small time steps or fine spatial discretizations. 
+
+\para{Our contributions} 
+\begin{enumerate}
+  \item We present a parallel platform for long-time simulations of \rbcs through complex blood vessels.
+    The extension to suspensions of various particulates (fibers, rigid bodies etc.) is straightforward from the boundary integral formulation. 
+    Flows through several complicated geometries are demonstrated.
+  \item We have parallelized a boundary solver for elliptic PDEs on smooth complex geometries in \threed. 
+    By leveraging the parallel fast-multipole method of \cite{malhotra2015} and the parallel forest of quadtrees of \cite{BursteddeWilcoxGhattas11}, we are able to achieve good parallel performance and load balancing.
+  \item We have extended the parallel collision handling of \cite{lu2018parallel} to include rigid \threed boundaries composed of patches. 
+  \item We present weak and strong scalability results of our
+    simulation on the Skylake cluster and weak scaling results on the
+    Knights Landing cluster on Stampede2 at the Texas Advanced
+    Computing Center along with several visualizations of long-time,
+    large-scale blood cell flows through vessels.
+    We observe %a 15$\times$ speed-up in strong scaling at
+    49\% strong scaling efficiency for a 32-fold increase of compute
+    cores. 
+    In our largest test on 12288 cores, we simulate 1,048,576 \rbcs in
+    a blood vessel composed of 2,097,152
+    patches with weak scaling efficiency of 71\% compared to 192 cores
+    (\cref{fig:wscale-large-grain}). In each time step, this test uses
+    over three billion degrees of freedom
+    and over four billion surface elements (triangles) for collision.
+  %\item We achieve to simulate the realistic blood flows of high-volume fraction($47\%$)\cref{fig:high-vol-snap}.
+  \item We are able to simulate realistic human blood flows with \rbc volume
+    fractions over $47\%$ (\cref{fig:high-vol-snap}).
+
+\end{enumerate}
+\textbf{Limitations. }
+Despite the advantages and contributions of the computational framework presented
+here, our work has some limitations.
+We have made several simplifications in our model for \rbcs. 
+We are restricted to the low Reynolds number regime, i.e., small arteries and capillaries. 
+We use a simplified model for \rbcs, assuming the cell membranes to be inextensible
+and with no in-plane shear rigidity.
+It has been shown that flows in arterioles and capillaries with
+diameter of <50 $\mu$m and \rbcs with 5 $\mu$m diameter have a
+Reynolds number of $<5 \times 10^{-3}$ \cite{wang2013simulation}\cite[Section 5.4]{caro2012mechanics} with roughly $2$\% error in approximating confined flows \cite{al2008motion}. 
+This is sufficient for our interest in the qualitative behavior of particulate flows, with the possibility of investigating rheological dynamics in larger channels.
+
+Regarding algorithms, each \rbc is discretized with an equal number of points, despite the 
+varied behavior of the velocity through the vessel. 
+Adaptive refinement is required in order to resolve the velocity accurately.
+%We only use first-order time stepping in this work, but high-order time
+%stepping, like spectral deferred correction, are easily integrated as shown in \cite{lu2017}.
+Finally, the blood vessel is constructed to satisfy certain geometric
+constraints that allow for the solution of \cref{eq:double_layer_int_eq} via
+singular integration.
+This can be overcome through uniform refinement, but a parallel adaptive
+algorithm is required to maintain good performance. 
+
+\textbf{Related work: blood flow. }
+Large-scale simulation of \rbc flows typically fall into four
+categories: (a) \textit{Immersed boundary (\ib)} and \textit{immersed
+  interface methods}; (b) particle-based methods such as
+%\textit{lattice Boltzmann} (\lb),
+\textit{dissipative particle dynamics (\dpd)} and \textit{smoothed
+  particle hydrodynamics (\sph)} (c) multiscale network-based
+approaches and (d) \textit{boundary integral equation (\bie)}
+approaches.
+%\note[MJM]{a reviewer said LB isn't a particle-based method?}
+For a comprehensive review of general blood flow simulation methods, see \cite{freund2014numerical}.
+\ib methods can produce high-quality simulations of heterogeneous particulate flows in complex blood vessels \cite{balogh2017direct,balogh2017computational, xu2013large}.
+These methods typically require a finite element solve for each \rbc to compute membrane tensions and use \ib to couple the stresses with the fluid. 
+This approach quickly becomes costly, especially for high-order elements, and although reasonably large simulation have been achieved \cite{saadat2018immersed,saadat2019simulation}, large-scale parallelization has remained a challenge.
+A different approach to simulating blood flow is with multiscale reduced-order models.
+By making simplifying assumptions about the fluid behavior throughout the domain
+and transforming the complex fluid system into a simpler flow problem, the
+macroscopic behaviors of enormous capillary systems can be characterized 
+\cite{peyrounette2018multiscale,perdikaris2016multiscale} and
+scaled up to thousands of cores \cite{perdikaris2015effective}.
+This comes at a cost of local accuracy; by simulating the flows directly, we are able to accurately resolve local \rbc dynamics that are not captured by such schemes.
+
+Particle-based methods have had the greatest degree of success at large-scale blood flow simulations \cite{gounley2017computational,grinberg2011new,randles2015massively, rossinelli2015silico}. 
+These types of approaches are extremely flexible in modeling the fluid and immersed particles, but are computationally demanding and usually suffer from numerical stiffness that requires very small time steps for a given target accuracy. For a comprehensive review, see \cite{ye2016particle}.
+There have also been recent advances in coupling a particle-based
+\dpd-like scheme with \ib in parallel \cite{ye2017hybrid,ye2018three},
+but the number of \rbcs simulated and the complexity of the boundary seems to be limited.
+
+\bie methods have successfully realized large-scale simulations of millions of \rbcs \cite{rahimian2010petascale} in free space.
+Recently, new methods for robust handling of collisions between \rbcs in high-volume fraction simulations have been introduced \cite{lu2018parallel,Malhotra2017}. 
+This approach is versatile and efficient due to only requiring discretization of
+\rbcs and blood vessel surfaces, while achieving high-order convergence and optimal complexity implementation due to fast summation methods \cite{Veerapaneni2009b,Veerapaneni2011,rahimian2015,sorgentone2018highly,sorgentone20193d,af2016fast,Zhao2010}.
+To solve elliptic partial differential equations, \bie approaches have been successful in several application domains \cite{YBZ,wala20183d,wala2018optimization,bruno2013high}.
+However, to our knowledge, there has been no work combining a Stokes
+boundary solver on arbitrary complex geometries in \threed with a
+collision detection and resolution scheme to simulate \rbc flows at large scale.
+This work aims to fill this gap, illustrating that this can  be
+achieved in a scalable manner.
+
+
+\textbf{Related work: collisions. }
+Parallel collision detection methods are a well-studied area in computer graphics for both shared memory and GPU parallelism \cite{Liu2010,Mazhar2011,Kim2009}.
+\cite{Iglberger2009,Du2017} detect collisions between rigid bodies in a distributed memory architecture via domain decomposition.
+\cite{Pabst2010} constructs a spatial hash to cull collision candidates and explicitly check candidates that hash to the same value.
+The parallel geometry and physics-based collision resolution scheme detailed in \cite{yan2019computing} is most similar to the scheme used in this work. 
+However, such discrete collision detection schemes require small time steps to guarantee detections which can become costly for high-volume fraction simulations.
