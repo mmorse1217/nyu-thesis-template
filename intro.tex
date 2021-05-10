@@ -1,26 +1,36 @@
+
 Microscale particulate flows play a pivotal role in many biophysical settings.
 In particular, blood flows through vasculature can be modeled with reasonable accuracy by a collection of deformable particles called \textit{vesicles} suspended in a Newtonian fluid.
 A clear understanding blood circulation through capillaries would shed light on important yet complex phenomena such as vasodilation, vasoconstriction, thrombosis and clotting.
 The ability to simulate such flows with modern computers would provide a means to computationally investigate these phenomena with an unprecidented level of control and resolution and is a crucial milestone in the pursuit of the next generation of biological advances.
+Moreover, the tools required for blood flow simulation can also be applied in other biological settings.
+By simulating deterministic lateral displacement microfluidic chips , one can optimize the device geometry and avoid the typical expensive trial-and-error manufacturing process \cite{kabacaouglu2019sorting}.
+By simulating intra-cellular dynamics of organelles, researchers can gain insights into biophysical dynamics by adjusting model formulations and infer biological behaviors by comparing experimental and computational results \cite{nazockdast2017cytoplasmic}. 
+With better computational tools, more complex systems can be investigated computationally, rapidly increasing the pace of biological innovation.
+In this work, however, we will restrict our attention to red blood cell flows through capillaries.
 
-The tools required for blood flow simulation can also be applied in other biological settings.
-Deterministic lateral displacement microfluidic chips are able to sort particles suspended in a fluid flow by varying the geometry of a collection of pillars tiling the length of the device.
-By simulating such a device, one can optimize the device shape and expensive trial-and-error through manufacturing \cite{kabacaouglu2019sorting}.
-Intra-cellular dynamics of organelles \cite{nazockdast2017cytoplasmic}
+To faithfully simulate red blood cell flows, there are several outstanding compuatational obstacles.
+The first is \textit{robustness}: can we design a set of algorithms that can handle arbtirary flows?
+Typical flows are characterized by complex vascular geometry, high-volume fraction flows (>45\% in humans) and long simulation times. 
+This will result in nearly-touching and potentially colliding geometries that causes many standard simulation approaches to fail; our algorithms need to handle these adversarial cases.
+Another challenge is \textit{accuracy}: can we reliably control the numerical error of our algorithms?
+We would like accuracy of our simulation to correspond to the accuracy of our physical model, not to the accuracy of our algorithms.
+Ideally, one would hope for a single parameter that can be tuned to control the overall numerical error.
 
-\subsection{Challenges}
- - accuracy
- - robustness
- - serial and parallel scalability
+Constructing accurate and robust numerical algorithms is demanding in its own right, but as little as a microliter of human blood can contain almost four million red blood cells.
+This imposes a final computational challenge: in order to simulate several microliters of blood, our algorithms must be \textit{fast} and \textit{scalable}.
+Achieving algorithmic complexity proportional to the number of cells size while guaranteeing robustness and high accuracy is a tall order.
+Even so, the representation of such a large simulation vastly exceeds the memory capcity of a single machine, so distributed algorithms are needed to complete the simulation in reasonable times.
 
-simulation of fluid flow in complex geometries
-
-robust parallel scaling of rbc simulations
 \subsection{Overall Approach}
-boundary integral?
-\subsection{Summary of Thesis}
-In \cref{chp:hedgehog}, we will present a fast high order, boundary solver for elliptic partial differenetial equations (\pdes) in \threed complex geometries. 
-
-In \cref{chp:bloodflow}, we apply the boundary solver of \cref{chp:hedgehog} to 
-C2 is high order boundary solver
-C3 is parallel blood flow simulation
+\todo{boundary integral?}
+\subsection{Contributions and Outline}
+This thesis overcomes the obstacles detailed above, resulting in a simulation platform for realistic red blood cell flows.
+In particular, this thesis will proceed as follows:
+\begin{itemize}
+    \item In \cref{chp:hedgehog}, we introduce an $O(N)$ high-order solver for elliptic \pdes in \threed geometries.
+        The core component of the solver is \qbkix, a straightforward kernel-independent singular/near-singular quadrature scheme for layer potentials arising from \pdes defined on domains with spline-based boundaries.
+        We design addaptive geometric preprocessing and query algorithms to gurantee the accuracy of \qbkix while enabling good performance. 
+        We evaluate the method on a variety of complex geometries and boundary conditions and stress test it on several challenging geometries
+    \item Building upon \cref{chp:hedgehog}, we parallelize the solver presented in \cref{chp:hedgehog} and, coupled with other parallel vesicle algorithms, we
+\end{itemize}
