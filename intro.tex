@@ -22,15 +22,31 @@ This imposes a final computational challenge: in order to simulate several micro
 Achieving algorithmic complexity proportional to the number of cells size while guaranteeing robustness and high accuracy is a tall order.
 Even so, the representation of such a large simulation vastly exceeds the memory capcity of a single machine, so distributed algorithms are needed to complete the simulation in reasonable times.
 
-\subsection{Overall Approach}
-\todo{boundary integral?}
-\subsection{Contributions and Outline}
-This thesis overcomes the obstacles detailed above, resulting in a simulation platform for realistic red blood cell flows.
+\section{Contributions and Outline}
+This thesis overcomes these obstacles, resulting in a practical simulation platform for realistic red blood cell flows.
 In particular, this thesis will proceed as follows:
 \begin{itemize}
-    \item In \cref{chp:hedgehog}, we introduce an $O(N)$ high-order solver for elliptic \pdes in \threed geometries.
-        The core component of the solver is \qbkix, a straightforward kernel-independent singular/near-singular quadrature scheme for layer potentials arising from \pdes defined on domains with spline-based boundaries.
+    \item In \Cref{chp:hedgehog}, we introduce an $O(N)$ high-order solver for elliptic \pdes in \threed geometries.
+        The core component of the solver is \qbkix, a straightforward \pde-independent singular/near-singular quadrature scheme for layer potentials arising from \pdes defined on domains with spline-based boundaries.
         We design addaptive geometric preprocessing and query algorithms to gurantee the accuracy of \qbkix while enabling good performance. 
         We evaluate the method on a variety of complex geometries and boundary conditions and stress test it on several challenging geometries
-    \item Building upon \cref{chp:hedgehog}, we parallelize the solver presented in \cref{chp:hedgehog} and, coupled with other parallel vesicle algorithms, we
+    \item In \Cref{chp:bloodflow}, we present a robust scalable bloodflow simulation platform. 
+        We parallelize the \pde solver presented in \cref{chp:hedgehog} to scale to thousands of processors.
+        We then integrate this with several parallel vesicle simulation libraries. 
+        In partiular, we extend a collision-free time-stepping scheme for vesicles to also handle rigid boundaries.
+        We explore strong and weak scaling results and scale this simulation to thousands of cores.
+\end{itemize}
+
+\section{Background}
+\todo{physical assumptions?}
+\begin{itemize}
+    \item \todo{related work on low accuracy scalable blood flow}
+    \item \todo{related work on BIE for blood flow}
+\end{itemize}
+
+\section{Overall Approach}
+\todo{boundary integral}
+\begin{itemize}
+    \item Rigid boundary: qbx
+    \item vesicle: shravan, abtin, dhairya etc.
 \end{itemize}
