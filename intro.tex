@@ -9,6 +9,38 @@ By simulating intra-cellular dynamics of organelles, researchers can gain insigh
 With better computational tools, more complex systems can be investigated computationally, rapidly increasing the pace of biological innovation.
 In this work, however, we will restrict our attention to red blood cell (\rbc) flows through capillaries.
 
+We present a robust scalable platform to simulate \rbc flows through capillaries. 
+We first construct a solver for elliptic partial differential equations (\pdes) that robustly handles complex geometries.
+We then extend and parallelize this solver, along with a collision-free time stepping scheme, to advect \rbcs along viscous flows.
+We scale this solver to nearly 35,000 cores and millions of \rbcs, demonstrating its ability to capture high fidelity real-world biological phenomena.
+
+\section{Background}
+The fluid dynamics of blood flow, or \textit{hemodynamics}, spans several regimes. 
+The first regime is in larger veins and arteries, and in regions near the heart, where dynamical impact of \rbcs are largely negligible and blood can be well characterized as a non-viscous continuum. 
+The second regime is very small length scales ($\leq 80 \mu$m \todo{reference}) such as capillaries, called microcirculation.
+In this setting, blood vessel diameter can equal the length of 5-10 \rbcs \todo{reference}, so the overall flow dynamics are largely determined by \rbcs. 
+ This implies also that the blood plasma has negligible inertial fluid forces (Reynolds number $Re \leq 10^{-3}$) and can be characterized as a viscous Newtontian fluid \cite{cortinovis2006capillary}.
+The final, most complex length scale to study is the transition between these two regimes.%, which we will call the \textit{transitory} regime.
+This regime contains length scales varying over three orders of magnitude, implying variable plasma viscosity and non-trivial \rbc flow contributions.
+In the non-viscous regime, there are many simulations of the heart and associated vasculature (\todo{find some}).
+We will focus on the microcirculation in this work, since target applications such as vasoconstriction, thombosis and clotting occuring in this regime are difficult to investigate experimentally.
+
+\rbcs are somewhat unique cellular structures. 
+They contain no nucleus or mitochondira, in order to maximize its capacity to transport hemoglobin \cite{zhang2011red} and have a biconcave shape at rest to maximize large-scale lamniar flow and minimize platelet scattering \cite{uzoigwe2006human}.
+Most importantly, \rbcs are highly \textit{deformable}, allowing them to travel through capillaries much narrower than their resting diameter \cite{huisjes2018squeezing}.
+Macroscopic physiological mutations, such as sickle cell anemia and thalassemia, are known to impact the degree of \rbc deformability \cite{huisjes2018squeezing}, indicated its importance in the overall dynamics.
+This deformability comes from constiuents of its thin cell membrane: the cytoskeleton and a phospholipid bilayer .
+Due to the complex membrane structure, \rbc membranes are also extremely resistant to in-plane shear forces and membrane extension \cite{lee2008theoretical}.
+Together, these characteristics allow \rbc flow dynamics to be well-approximated by a thin, deformable, inextensible membrane filled with a viscous Newtontian fluid called a \textit{vesicle} \todo{cite}.
+
+In summary, in order to model microcirculation through capillaries, we must:
+\begin{itemize}
+    \item represent blood plasma as a viscous Newtontian fluid within a blood vessel
+    \item approximate \rbcs as a thin, deformable, fluid-filled membrane 
+    \item incorporate \rbc membrane inextensibility along with tension and bending forces within the membrane.
+\end{itemize}
+
+\section{Challenges}
 To faithfully simulate \rbc flows, there are several outstanding compuatational obstacles.
 The first is \textit{robustness}: can we design a set of algorithms that can handle arbtirary flows?
 Typical flows are characterized by complex vascular geometry, high-volume fraction flows (>45\% in humans) and long simulation times. 
@@ -20,7 +52,36 @@ Ideally, one would hope for a single parameter that can be tuned to control the 
 Constructing accurate and robust numerical algorithms is demanding in its own right, but as little as a microliter of human blood can contain almost four million \rbcs.
 This imposes a final computational challenge: in order to simulate several microliters of blood, our algorithms must be \textit{fast} and \textit{scalable}.
 Achieving algorithmic complexity proportional to the number of cells size while guaranteeing robustness and high accuracy is a tall order.
-Even so, the representation of such a large simulation vastly exceeds the memory capcity of a single machine, so distributed algorithms are needed to complete the simulation in reasonable times.
+Moreover, the representation of millions of \rbcs and the blood vessel vastly exceeds the memory capcity of a single machine, so distributed algorithms are needed to complete the simulation with reasonable walltime.
+
+\todo{Work that tries to do this but misses the mark}
+\begin{itemize}
+    \item \todo{related work on low accuracy scalable blood flow}
+    \item \todo{related work on BIE for blood flow}
+\end{itemize}
+
+\section{Overall Approach}
+Motivated by our previous discussion of the physical properties of \rbc flows, we approximate the physical behavior of individual \rbcs by vesicles and assume that the surrounding fluid is highly viscous and Newtonian.
+We will refer to \rbcs and vesicles interchangeably throughout the remainder of this work.
+The blood vessel is a rigid closed fluid-filled domain. 
+However, such flows are far too complex for analytic solutions and require numerical simulation to study any large system of biological significance.
+
+Since the \rbcs and blood vessel are both bounded by smooth surfaces, we adpot a \textit{boundary integral formulation} of the fluid flow through the vessel.
+In brief, a boundary integral formulation allows us to express the fluid velocity at a point in the blood vessel as a sum of integrals, each one defined on the distinct surfaces bounding the fluid.
+We can evaluate these integrals on the surface of \rbcs and advect them along the fluid's trajectory. 
+
+This approach has many other advantages. 
+It avoids discretizing the fluid volume and avoids the expensive, error-prone process of remeshing at each timestep.
+We are able to leverage quadrature methods for smooth functions to produce highly accurate integration.
+The resulting integral equations have favorable conditioning, allowing iterative solvers like \gmres to converge in a constant number of steps.
+
+
+
+\todo{boundary integral}
+\begin{itemize}
+    \item Rigid boundary: qbx
+    \item vesicle: shravan, abtin, dhairya etc.
+\end{itemize}
 
 \section{Contributions and Outline}
 This thesis overcomes these obstacles, resulting in a practical simulation platform for realistic \rbc flows through capillaries.
@@ -30,51 +91,11 @@ In particular, this thesis will proceed as follows:
         The core component of the solver is \qbkix, a straightforward \pde-independent singular/near-singular quadrature scheme for layer potentials arising from \pdes defined on domains with spline-based boundaries.
         We design addaptive geometric preprocessing and query algorithms to gurantee the accuracy of \qbkix while enabling good performance. 
         We evaluate the method on a variety of complex geometries and boundary conditions and stress test it on several challenging geometries
+        This is based on the work in \cite{morse2020robust}.
     \item In \Cref{chp:bloodflow}, we present a robust scalable bloodflow simulation platform. 
         We parallelize the \pde solver presented in \cref{chp:hedgehog} to scale to thousands of processors.
         We then integrate this with several parallel \rbc simulation libraries. 
         In partiular, we extend a collision-free time-stepping scheme for deformable bodies to also handle rigid boundaries.
         We explore strong and weak scaling of our plaform and scale this simulation to thousands of cores.
-\end{itemize}
-
-\section{Background}
-The fluid dynamics of blood flow, or \textit{hemodynamics}, spans several regimes. 
-The first regime is in larger veins and arteries, and in regions near the heart, where dynamical impact of \rbcs are largely negligible and blood can be well characterized as a non-viscous continuum. 
-The second regime is very small length scales ($\leq 80 \mu$m \todo{reference}) such as capillaries, called microcirculation.
-In this setting, blood vessel diameter can equal the length of 5-10 \rbcs \todo{reference}, so the overall flow dynamics are largely determined by \rbcs. 
- This implies also that the blood plasma has negligible inertial fluid forces (Reynolds number $Re \leq 10^{-3}$) and can be characterized as a viscous Newtontian fluid \cite{cortinovis2006capillary}.
-The final, most complex length scale to study is the transition between these two regimes.%, which we will call the \textit{transitory} regime.
-This regime contains length scales varying over three orders of magnitude, implying variable plasma viscosity and non-trivial \rbc flow contributions.
-In the non-viscous regime, there are many simulations of the heart and associated vasculature (\todo{find some}).
-We will focus on the microcirculatory regime in this work, since target applications such as vasoconstriction, thombosis and clotting occuring in this regime are virtually impossible to investigate experimentally.
-
-\rbcs are somewhat unique cellular structures. 
-They contain no nucleus or mitochondira, in order to maximize its capacity to transport hemoglobin \cite{zhang2011red} and have a biconcave shape at rest to maximize large-scale lamniar flow and minimize platelet scattering \cite{uzoigwe2006human}.
-Most importantly, \rbcs are highly \textit{deformable}, allowing them to travel through capillaries much narrower than their resting diameter \cite{huisjes2018squeezing}.
-Macroscopic physiological mutations, such as sickle cell anemia and thalassemia, are known to impact the degree of \rbc deformability \cite{huisjes2018squeezing}, indicated its importance in the overall dynamics.
-This deformability comes from constiuents of its thin cell membrane: the cytoskeleton and a phospholipid bilayer .
-Due to the complex membrane structure, \rbc membranes are also extremely resistant to in-plane shear forces and membrane extension \cite{lee2008theoretical}.
-Together, these characteristics allow \rbc flow dynamics to be well-approximated by a thin, deformable, inextensible membrane filled with a viscous Newtontian fluid \todo{cite}.
-
-In summary, in order to model microcirculation through capillaries, we must:
-\begin{itemize}
-    \item represent blood plasma as a viscous Newtontian fluid in a blood vessel
-    \item approximate \rbcs as a thin, deformable, fluid-filled membrane 
-    \item capture \rbc membrane inextensibility along with tension and bending forces within the membrane.
-\end{itemize}
-\begin{itemize}
-    \item \todo{red bloods cells act like vesicles}
-    \item \todo{background fluid is Stokesian}
-\end{itemize}
-\todo{Related work}
-\begin{itemize}
-    \item \todo{related work on low accuracy scalable blood flow}
-    \item \todo{related work on BIE for blood flow}
-\end{itemize}
-
-\section{Overall Approach}
-\todo{boundary integral}
-\begin{itemize}
-    \item Rigid boundary: qbx
-    \item vesicle: shravan, abtin, dhairya etc.
+        This is based on the work in \cite{lu2019scalable}.
 \end{itemize}
