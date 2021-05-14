@@ -149,10 +149,10 @@ and demonstrate the convergence behavior of our numerical methods.
     %\end{table}
 \end{minipage}
 %}
-\mcaption{fig:sscale}{}{
+\mcaption{fig:sscale}{
   Strong scalability of a simultion with $40960$ \rbcs on Stampede's
   \abbrev{SKX} partition
-  for the vessel network geometry shown in \cref{fig:strong-scale-domain}. The
+  for the vessel network geometry shown in \cref{fig:strong-scale-domain}.}{ The
   vessel is discretized with $40960$ polynomial patches. Shown in the bar graph
   is a breakdown of 
   the compute resources (wall-time $\times$ CPU cores) required by the
@@ -266,11 +266,11 @@ visualizations.
             %\bie + Collision Efficiency & 1.00 & 0.62 & 0.37 & 0.46 & 0.37 \\\bottomrule
         \end{tabular}
 \end{minipage}
-\mcaption{fig:wscale-large-grain}{}{Weak scalability on Stampede's
+\mcaption{fig:wscale-large-grain}{Weak scalability on Stampede's
   \abbrev{SKX} partition with node grain size of $4096$ \rbcs and
   $8192$ polynomial patches per compute node (each node has 48 cores)
   for the vessel geometry shown in
-  \cref{fig:wsscale-domain}. Increasing the number of \rbcs and
+  \cref{fig:wsscale-domain}.}{ Increasing the number of \rbcs and
   boundary patches is realized by decreasing the size of the \rbcs as
   discussed in \cref{ss:weak}.  Shown in the bar graph is a breakdown of
   wall-time spent in individual components for a simulation with 10 time
@@ -350,7 +350,7 @@ visualizations.
         \end{tabular}
 \end{minipage}
 
-\mcaption{fig:wscale-knl}{}{
+\mcaption{fig:wscale-knl}{Weak scalability on Stampede's \knl parition with node grain size of 4096 \rbcs and 8192 polynomial patches per compute node for the vessel geometry shown in \cref{fig:wsscale-domain}}{
   Same as \cref{fig:wscale-large-grain} but on Stampede2's
   \abbrev{KNL} partition with $512$ \rbcs and
   $1024$ vessel boundary patches per node (each node has 68
@@ -376,8 +376,8 @@ visualizations.
 \begin{minipage}[b]{0.2\textwidth}
     \includegraphics[angle=0,width=.98\linewidth]{high_vol_snap4}
 \end{minipage}
-    \mcaption{fig:high-vol-snap}{}{Shown is a high-volume fraction
-      sedimentation due to gravitational force.
+    \mcaption{fig:high-vol-snap}{High-volume fraction
+      sedimentation due to gravitational force.}{
     The initial configuration (top figures) has a volume fraction of $47\%$. 
     As the cells sediment to the lower part of the domain (bottom figures), the local
     volume fraction of the final state in this lower part of the
@@ -456,7 +456,7 @@ scaling for these iterations. A more detailed analysis of this behavior is neede
 \begin{figure*}[!bht]
 \centering
   \includegraphics[angle=0,width=.85\linewidth]{weak_snap1}
-  \mcaption{fig:wsscale-domain}{}{
+  \mcaption{fig:wsscale-domain}{Weak scaling vessel geometry}{
     For our weak scaling experiments, we use the the vessel geometry
     shown above with inflow boundary conditions on the
     right side and outflow boundary condition on the two left sides.
@@ -589,7 +589,7 @@ entire calculation extremely fast with \abbrev{MKL} linear algebra routines.
 These improvements together will allow our algorithm to scale well beyond the
 computational regime explored in this work.
 
-\subsection[]{Verification}
+\subsection{Verification}
 There are few analytic results known about \rbcs in confined Stokes
 flows against which we can verify our simulations. However,
 exact solutions can be obtained for a part of our setup, invariants
@@ -622,12 +622,12 @@ we observe the expected $O(L^7)$ convergence.
 %We see that the extrapolation error is dominant and observe the expected $O(L^7)$ convergence
 \begin{figure}[h]
   \centering
-\begin{minipage}[b]{0.3\textwidth}
+%\begin{minipage}[b]{.2\textwidth}
 \begin{tikzpicture}
   %
   \begin{loglogaxis}[%
-    width=1.75in,
-    height=1.25in,
+    width=2.62in,
+    height=1.875in,
       scale only axis,
       separate axis lines,
       every outer x axis line/.append style={white!15!black},
@@ -655,23 +655,23 @@ we observe the expected $O(L^7)$ convergence.
     \addplot [color=black,line width=1.0pt,dotted,domain=5e-2:.4]{400*x^7};
     \addlegendentry{$O(L^7)$}
   \end{loglogaxis}
-\end{tikzpicture}%
-\end{minipage}%
-\hspace*{.1\linewidth}
+\end{tikzpicture}
+%\end{minipage}
+%\hspace*{.1\linewidth}
 %\begin{minipage}[b]{0.2\textwidth}
-\begin{minipage}[b]{0.4\textwidth}
+%\begin{minipage}[b]{0.25\textwidth}
     %\hspace*{-.05\linewidth}\includegraphics[angle=0,width=.3\linewidth]{figs/ttorus2_convergence_setup.png}
-\includegraphics[angle=0,width=.3\linewidth]{figs/ttorus2_convergence_setup.png}
-\end{minipage}%
-\mcaption{fig:boundary-err}{}{
-  Error convergence test solving \cref{eq:int_eq_disc}. 
+%\includegraphics[angle=0,width=\linewidth]{figs/ttorus2_convergence_setup.png}
+%\end{minipage}%
+\mcaption{fig:boundary-err}{
+    Error convergence test solving \cref{eq:int_eq_disc} with \qbkix on the domain \cref{fig:solver-conv-test-cases}-right .}{
   We evaluate a known solution on the coarse discretization and solve for $\phi$.
 On the left, we plot the maximum relative error in the infinity norm
 of $\vu^\Gamma$ evaluated on the surface. 
 On the right, we show the coarse discretization of the domain boundary
 and patches.
 %in the coarse discretization of \cref{eq:int_eq_disc}.
-}  \vspace{-5pt}
+}  %\vspace{-5pt}
 %\end{minipage}
 \end{figure}
 
@@ -703,6 +703,30 @@ discretization to demonstrate the dominance of the time-stepping error.
 We observe first-order convergence with our locally-implicit backward Euler scheme which confirms that our collision resolution algorithm does not have a significant impact on time-stepping accuracy.
 %87, 58
 \todo{add back in vesicle validation fig}
+\begin{figure}[!htb]
+  \centering
+  \hfill
+  \begin{minipage}{.25\textwidth}
+      \centering
+    %\includegraphics[width=52pt,height=35pt]{shear1}
+    \includegraphics[width=.95\linewidth]{shear1}
+  \end{minipage}\hfill
+  \begin{minipage}{.25\textwidth}
+      \centering
+    \includegraphics[width=.95\linewidth]{shear2}
+  \end{minipage}\hfill
+  \begin{minipage}{.25\textwidth}
+      \centering
+    \includegraphics[width=.95\linewidth]{shear3}
+  \end{minipage}\hfill
+  \begin{minipage}{.25\textwidth}
+      \centering
+    \includegraphics[width=.95\linewidth]{shear5}
+  \end{minipage}\hfill
+    \mcaption{fig:shear-snap}{Snapshots of two vesicles in shear flow}{ %\vspace{-5pt}
+    At $T=0$, two vesicles are placed at $[-5.5, 0, 0]$ and $[0, 0, 0]$ respectively.}
+\end{figure}%
+
 %\begin{figure}[!htb]
 %  \subfloat[$t=0$\label{sfg:shear-snap1}]{\framebox(52,35){\includegraphics[width=52pt,height=35pt]{shear1}}}
 %  \hspace{1pt}
@@ -717,7 +741,7 @@ We observe first-order convergence with our locally-implicit backward Euler sche
 \begin{figure}[!htb]
   \centering
     \includepgf{conv}
-  \mcaption{fig:shear-conv}{}{
+    \mcaption{fig:shear-conv}{Temporal error convergence of shear flow simulation in \cref{fig:shear-snap}}{
     %The initial offset is $\delta_0 = 0$.
     Shown is the error in the final ($T=25$)
     centroid location as we decrease the time step size for two

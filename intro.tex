@@ -73,10 +73,23 @@ We can evaluate these integrals on the surface of \rbcs and advect them along th
 This approach has many other advantages. 
 It avoids discretizing the fluid volume and avoids the expensive, error-prone process of remeshing at each timestep.
 We are able to leverage quadrature methods for smooth functions to produce highly accurate integration.
-The resulting integral equations have favorable conditioning, allowing iterative solvers like \gmres to converge in a constant number of steps.
+Well-formulated integral equations have favorable conditioning when discretized, allowing iterative solvers like \gmres to converge in a constant number of steps.
+With an appropriate discretization, fast summation methods such as the Fast Multipole Method (\fmm) can evaluate the resulting linear system matrix with optimal complexity.
 
+The primary difficulty introduced by the boundary integral formulation is the need to evaluate integrals of singular functions or functions with rapidly varying high-order derivatives. These are call \textit{singular} and \textit{near-singular} integrals, respectively.
+These integrals are well-defined mathematically, but standard numerical quadrature methods fail to resolve their true value.
+Special algorithms are required in order to accurately evaluate such integrals.
 
+Two recent papers \cite{barnett2014evaluation,KBGO} introduce a straightforward method called \textit{Quadrature by Expansion}, or \qbx, that approximates a singular/near-singular integral with a local expansion, whose coefficients are defined by smooth integrals.
+\qbx has since evolved rapidly, with variations \cite{ST,aT1,RBZ,af2016fast} and analyses \cite{EGK,aT2,klinteberg2020quadrature} for various \pdes and fast accelerations \cite{RKO,wala20193d,wala2019optimization,wala2020approximation}.
+Although several \threed implementations have been developed, \cite{ST, wala2019optimization,wala2020approximation, wala20193d}, \threed solvers have been tested on relatively benign geometries.
+In practical engineering scenarios, geometries often come from CAD files based on splines or B\'ezier curves that have rapidly varying curvatures and nearly touching, non-local surface patches.
+Moreover, the large scale nature of realistic problems require efficient and scalable parallel implementations to be competitive with state-of-the-art finite element implementations.
 
+There is also a rich literature regarding vesicle simulations based on boundary integral formulations \todo{cite them}.
+Fast and accurate parallel algorithms have been developed and scaled to thousands of cores. 
+However, much is this work is either in \twod \todo{cite} or a free-space or periodic setting in \threed.
+To recover qualitative properties of \rbc flows, the vesicles need to simulated in a confined flow with representative vessel geometries (i.e., more complicated than a cylinder/torus).
 \todo{boundary integral}
 \begin{itemize}
     \item Rigid boundary: qbx
@@ -85,17 +98,18 @@ The resulting integral equations have favorable conditioning, allowing iterative
 
 \section{Contributions and Outline}
 This thesis overcomes these obstacles, resulting in a practical simulation platform for realistic \rbc flows through capillaries.
-In particular, this thesis will proceed as follows:
-\begin{itemize}
-    \item In \Cref{chp:hedgehog}, we introduce an $O(N)$ high-order solver for elliptic \pdes in \threed geometries.
-        The core component of the solver is \qbkix, a straightforward \pde-independent singular/near-singular quadrature scheme for layer potentials arising from \pdes defined on domains with spline-based boundaries.
-        We design addaptive geometric preprocessing and query algorithms to gurantee the accuracy of \qbkix while enabling good performance. 
-        We evaluate the method on a variety of complex geometries and boundary conditions and stress test it on several challenging geometries
-        This is based on the work in \cite{morse2020robust}.
-    \item In \Cref{chp:bloodflow}, we present a robust scalable bloodflow simulation platform. 
-        We parallelize the \pde solver presented in \cref{chp:hedgehog} to scale to thousands of processors.
-        We then integrate this with several parallel \rbc simulation libraries. 
-        In partiular, we extend a collision-free time-stepping scheme for deformable bodies to also handle rigid boundaries.
-        We explore strong and weak scaling of our plaform and scale this simulation to thousands of cores.
-        This is based on the work in \cite{lu2019scalable}.
-\end{itemize}
+In particular, this thesis will proceed as follows.
+
+In \Cref{chp:hedgehog}, we introduce an $O(N)$ high-order solver for elliptic \pdes in \threed geometries.
+The core component of the solver is \qbkix, a straightforward \pde-independent singular/near-singular quadrature scheme for layer potentials arising from \pdes defined on domains with spline-based boundaries.
+We design addaptive geometric preprocessing and query algorithms to gurantee the accuracy of \qbkix while enabling good performance. 
+We evaluate the method on a variety of complex geometries and boundary conditions and stress test it on several challenging geometries
+This is based on the work in \cite{morse2020robust}.
+
+In \Cref{chp:bloodflow}, we present a robust scalable bloodflow simulation platform. 
+We parallelize the \pde solver presented in \cref{chp:hedgehog} to scale to thousands of processors.
+We then integrate this with several parallel \rbc simulation libraries. 
+In partiular, we extend a collision-free time-stepping scheme for deformable bodies to also handle rigid boundaries.
+We explore strong and weak scaling of our plaform and scale this simulation to thousands of cores.
+This is based on the work in \cite{lu2019scalable}.
+

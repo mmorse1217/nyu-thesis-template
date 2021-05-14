@@ -283,12 +283,12 @@
 \newcommand{\mcaption}[3]{
         \ifthenelse{\isempty{#2}}
               {\caption[#1]{\small{#3} \label{#1}}}
-              {\caption[#1]{{\sc #2.} \small{#3} \label{#1}}}
+              {\caption[#2]{{\sc #2.} \small{#3} \label{#1}}}
         }
 \newcommand{\algcaption}[3]{
         \ifthenelse{\isempty{#3}}
-                   {\caption[#1]{{\sc #2.} \label{#1}}}
-                   {\caption[#1]{{\sc #2.} \newline\small{#3} \label{#1}}}
+                   {\caption[#2]{{\sc #2.} \label{#1}}}
+                   {\caption[#2]{{\sc #2.} \newline\small{#3} \label{#1}}}
         }
 
 %% bloodflow defs
