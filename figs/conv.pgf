@@ -1,7 +1,7 @@
 \begin{tikzpicture}
   \begin{loglogaxis}[%
-      width=2in,
-      height=1in,
+    width=3in,
+    height=2in,
       scale only axis,
       separate axis lines,
       every outer x axis line/.append,

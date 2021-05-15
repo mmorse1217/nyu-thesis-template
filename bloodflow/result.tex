@@ -60,8 +60,8 @@ and demonstrate the convergence behavior of our numerical methods.
 \begin{figure}[!th]
 \centering
 %\resizebox{.5\columnwidth}{!}{%
-\begin{minipage}[b]{0.48\textwidth}
-\begin{tikzpicture}[scale=0.7] %<<<
+\begin{minipage}[b]{0.75\textwidth}
+\begin{tikzpicture}[scale=0.9] %<<<
   \begin{semilogxaxis}[
     scale only axis,
     axis lines=left,
@@ -85,8 +85,8 @@ and demonstrate the convergence behavior of our numerical methods.
     ymin=0,
     ymax=10000000,
     bar width=22pt,
-    width=3.8in,
-    height=3in]
+    width=5.05in,
+    height=3.5in]
  
     \addplot[color=black, fill=clr10]
     table[x=cs,y=col] {result_data/strong_result_scaled_detail};
@@ -135,7 +135,7 @@ and demonstrate the convergence behavior of our numerical methods.
 \end{tikzpicture} %>>>
 \end{minipage}
 \vfill
-\begin{minipage}[b]{0.48\textwidth}
+\begin{minipage}[b]{0.8\textwidth}
     %\begin{table}
         \centering
         \begin{tabular}{ccccccc}\toprule
@@ -204,8 +204,8 @@ visualizations.
 
 \begin{figure}[!htb]
 \centering
-\begin{minipage}[b]{0.48\textwidth}
-\begin{tikzpicture}[scale=0.8] %<<<
+\begin{minipage}[b]{0.75\textwidth}
+\begin{tikzpicture}[scale=0.9] %<<<
   \begin{semilogxaxis}[
     axis lines=left,
     xtick=data,
@@ -230,8 +230,8 @@ visualizations.
     ymin=0,
     ymax=15000,
     bar width=22pt,
-    width=4.05in,
-    height=3in]
+    width=5.05in,
+    height=3.5in]
 
     \addplot[color=black, fill=clr10]
     table[x=cs,y=col] {result_data/weak_result_large_grain_large_vol};
@@ -248,12 +248,12 @@ visualizations.
     \addplot[color=black, fill=clr14]
     table[x=cs,y=other] {result_data/weak_result_large_grain_large_vol};
 
-  \end{semilogxaxis}
+  \end{semilogxaxis}%
 %  \node[draw=none] at (4,6.5) {(weak)};
-\end{tikzpicture} %>>>
+\end{tikzpicture}%
 \end{minipage}
 \vfill
-\begin{minipage}[b]{0.48\textwidth}
+\begin{minipage}[b]{0.75\textwidth}
         \centering
         \begin{tabular}{cccccc}\toprule
             cores           & $48$   & $192$  & $768$  & $3072$ & $12288$ \\ \cmidrule(lr){1-1} \cmidrule(lr){2-6}
@@ -289,8 +289,8 @@ visualizations.
 
 \begin{figure}[!htb]
 \centering
-\begin{minipage}[b]{0.48\textwidth}
-\begin{tikzpicture}[scale=0.8] %<<<
+\begin{minipage}[b]{0.75\textwidth}
+\begin{tikzpicture}[scale=0.9] %<<<
   \begin{semilogxaxis}[
     axis lines=left,
     xtick=data,
@@ -314,8 +314,8 @@ visualizations.
     ymin=0,
     ymax=7000,
     bar width=22pt,
-    width=4.05in,
-    height=3in]
+    width=5.05in,
+    height=3.5in]
 
    \addplot[color=black, fill=clr10]
     table[x=cs,y=col] {result_data/weak_knl_result_detail};
@@ -337,7 +337,7 @@ visualizations.
 \end{tikzpicture} %>>>
 \end{minipage}
   \vfill
-\begin{minipage}[b]{0.48\textwidth}
+\begin{minipage}[b]{0.75\textwidth}
         \centering
         \begin{tabular}{cccccc}\toprule
             cores &                         $136$   & $544$  & $2176$  & $8704$ & $34816$ \\ \cmidrule(lr){1-1} \cmidrule(lr){2-6}
@@ -361,19 +361,19 @@ visualizations.
 
 \begin{figure}[!htb]
 \centering
-\begin{minipage}[b]{0.2\textwidth}
+\begin{minipage}[b]{0.35\textwidth}
     \includegraphics[angle=0,width=.98\linewidth]{high_vol_snap1}
 \end{minipage}
 \hspace{2ex}
-\begin{minipage}[b]{0.2\textwidth}
+\begin{minipage}[b]{0.35\textwidth}
     \includegraphics[angle=0,width=.98\linewidth]{high_vol_snap2}
 \end{minipage}
 \vfill
-\begin{minipage}[b]{0.2\textwidth}
+\begin{minipage}[b]{0.35\textwidth}
     \includegraphics[angle=0,width=.98\linewidth]{high_vol_snap3}
 \end{minipage}
 \hspace{2ex}
-\begin{minipage}[b]{0.2\textwidth}
+\begin{minipage}[b]{0.35\textwidth}
     \includegraphics[angle=0,width=.98\linewidth]{high_vol_snap4}
 \end{minipage}
     \mcaption{fig:high-vol-snap}{High-volume fraction
@@ -419,7 +419,6 @@ We emphasize that these simulations are primarily for scaling purposes
 of our algorithms and are not expected to represent true blood flows.
 The platform can of course be applied to length scales where viscous
 flow is a valid assumption.
-%\note[MJM]{check}
 
 Additionally, \rbcs in such a confined flow will collide with the
 blood vessel wall
@@ -432,26 +431,12 @@ region such that the arising \rbc
 configuration is collision-free.
 
 \textbf{Limiting \abbrev{GMRES} iterations. }
-%We choose the complicated domains and \rbc configurations to present our
-%algorithms' scalability on realistic simulation that are of practical interest.
-%An downside of this decision is that the conditioning of double-layer
-%integral operator in \cref{eq:double_layer_int_eq} is poorly conditioned due to
-%the complex nature of the geometry.
 We have observed that the GMRES solver typically requires 30 iterations
 or less for convergence for almost all time steps, but the number
 of needed iterations may vary more in the first steps. 
 To simulate the amount of work in a typical simulation time
 step, we cap the number of \gmres iterations at 30 and report weak and strong
 scaling for these iterations. A more detailed analysis of this behavior is needed.
-
-%This causes \gmres to stagnate without a good initial guess at the solution.
-%As the simulation progresses and the fluid velocity becomes more smooth due to
-%\rbc alignment, the density from the previous time step becomes a
-%better initial guess, allowing \gmres reach the absolute tolerance in less than 30
-%iterations. 
-%\note[GS]{Should we say that we'll
-%  figure out why this is and rerun for the final paper?}
-
 
 \begin{figure*}[!bht]
 \centering
@@ -460,7 +445,6 @@ scaling for these iterations. A more detailed analysis of this behavior is neede
     For our weak scaling experiments, we use the the vessel geometry
     shown above with inflow boundary conditions on the
     right side and outflow boundary condition on the two left sides.
-    %\note[GS]{Matt/Libin, is that correct?}\note[LL]{correct}. 
     To setup the problem, we fill the vessel with 
     nearly-touching \rbcs of different sizes to obtain a desired
     number, and refine the
@@ -487,19 +471,52 @@ In the discussion below, we focus on {\bf\em COL} and {\bf\em BIE-solve}, as
   how to reduce the computational time required for {\bf\em BIE-FMM}.
 
 \textbf{Strong scalability. }\label{ss:strong}
+\begin{figure*}[!bht]
+\centering
+\begin{minipage}[b]{0.8\textwidth}
+  \includegraphics[angle=0,width=.98\linewidth]{strong_snap1}
+\end{minipage}
+    \mcaption{fig:strong-scale-domain}{Strong scaling and long-time simulation vessel geometry}{
+    Simulation results for 40,960 \rbcs in a complex vessel geometry.
+    For our strong scaling experiments, we use the vessel geometry
+    shown on the left, with inflow-outflow boundary conditions at various regions of the vessel geometry.
+    To setup the problem, we fill the vessel with 
+    nearly-touching \rbcs of different sizes.
+    The figure above shows a setup with overall
+    40,960 \rbcs at a volume fraction of 19\%, and 40,960 polynomial patches.
+    The full simulation video is available at 
+    \href{https://vimeo.com/329509229}{\textcolor{blue}{https://vimeo.com/329509229}}.
+  }
+\end{figure*}[!bht]
+\begin{figure*}[!bht]
+    \centering
+\begin{minipage}[b]{.95\textwidth}
+  \begin{minipage}[b]{0.48\textwidth}
+    \includegraphics[angle=0,width=.98\linewidth]{strong_snap2}
+  \end{minipage}
+  \begin{minipage}[b]{0.48\textwidth}
+    \includegraphics[angle=0,width=.98\linewidth]{strong_snap3}
+  \end{minipage}
+  \vfill\vspace{.1cm}
+  \begin{minipage}[b]{0.48\textwidth}
+    \includegraphics[angle=0,width=.98\linewidth]{strong_snap4}
+  \end{minipage}
+  \begin{minipage}[b]{0.48\textwidth}
+    \includegraphics[angle=0,width=.98\linewidth]{strong_snap5}
+  \end{minipage}
+\end{minipage}
+    \mcaption{fig:strong-scale-domain-snaps}{Snapshots of \cref{fig:strong-scale-domain} during long-time simulation}{}
+\end{figure*}
+
 To study the strong scalability of our algorithms, we use the blood vessel
 geometry and \rbc configuration in
 \cref{fig:strong-scale-domain}-left.
 This simulation contains 40,960 \rbcs and the blood vessel is
 represented with 40,960 patches.
-%we discretize each \rbc with $544$ quadrature
-%points and 2,112 points for collision detection.
-%\rbc dofs = 89,128,960, boundary dofs = 14,868,480
 With four degrees of freedom per \rbc quadrature point and three per vessel
 quadrature point, this amounts to
 89,128,960 and 14,868,480 degrees for the \rbcs and blood vessel, respectively 
 (103,997,440 in total).
-%We report the wall-time for $10$ time steps in \cref{fig:sscale}, 
 As can be seen from \cref{fig:sscale}, we achieve a $15.7$-fold
 speed-up in total wall-time scaling from 384 to 12288 cores,
 corresponding to $49\%$ parallel efficiency.  This level of  parallel
@@ -531,7 +548,6 @@ In the tables in  \cref{fig:wscale-large-grain,fig:wscale-knl},
 we report parallel efficiency with respect to the
 first multi-node run on both \skx and \knl architectures, i.e, with
 respect to 192 and 136 cores, respectively.
-%\note[MJM-GS]{think that's ok now}
 
 The largest weak scaling test contains 1,048,576 \rbcs and 2,097,152 polynomial
 patches on the blood vessel; we solve for 3,042,967,552 unknowns at each time
@@ -564,12 +580,6 @@ This can affect the overall scaling: For the run on 8704 cores, the
 percentage of collisions is larger, explaining the longer
 time spent in {\bf\em COL}.
 Despite this phenomenon, we achieve good weak scaling overall.
-%This could be addressed by constructing a simpler weak scaling example, but at the expense of physical relevance of the simulation.
-%\note[MJM]{possibly cut} %due to new run this paragraph might not be needed
-%For collisions, vesicles are randomly distributed so are collisions, the load
-%balance may cause the variance. 
-%Also tests on KNL also has smaller grain size(per node) than tests on SKX.
-%In general, we observe better performance/scaling on SKX nodes than KNL nodes.
 
 \textbf{Discussion. }
 The parts of the algorithm introduced in this paper scale as well as
@@ -616,13 +626,9 @@ We use $\eta =2$, $q=16$, $p=8$, $R=.04\sqrt{L}$ and $r = R/8$.
 In \cref{fig:boundary-err}-left, we report the relative error in the
 infinity-norm of the velocity.
 By choosing check point distances proportional to $\sqrt{L}$,
-%we observe the expected convergence as described in \cite{klockner2013quadrature}, and
 we observe the expected $O(L^7)$ convergence.
-%\note[GS]{I dont think I fully understand that convergence test.}
-%We see that the extrapolation error is dominant and observe the expected $O(L^7)$ convergence
 \begin{figure}[h]
   \centering
-%\begin{minipage}[b]{.2\textwidth}
 \begin{tikzpicture}
   %
   \begin{loglogaxis}[%
@@ -640,7 +646,10 @@ we observe the expected $O(L^7)$ convergence.
       %ymin=5e-2,
       %ymax=1,
       ylabel={Max relative error},
+      %x tick label style={/pgf/number format },
+      scaled ticks=false,
       ytick={1e-1,1e-3,1e-5, 1e-7, 1e-9},
+      xtick={1e-1},
       xlabel style={font=\small},
       ylabel style={font=\small},
       legend pos=north west,
@@ -649,20 +658,12 @@ we observe the expected $O(L^7)$ convergence.
 
     \addplot [color=plt-orange,line width=1.0pt,mark=square*,mark size=1.2pt,mark repeat=1,mark phase=0]
         table[x index=0,y index=1]{figs/bie-conv.dat};
-    %    \addlegendentry{$\max_i\|\vu_i-\hat{vu}_i\|_\infty/\|\vu_i\|_\infty$}
         \addlegendentry{Max rel. error}
 
     \addplot [color=black,line width=1.0pt,dotted,domain=5e-2:.4]{400*x^7};
     \addlegendentry{$O(L^7)$}
   \end{loglogaxis}
 \end{tikzpicture}
-%\end{minipage}
-%\hspace*{.1\linewidth}
-%\begin{minipage}[b]{0.2\textwidth}
-%\begin{minipage}[b]{0.25\textwidth}
-    %\hspace*{-.05\linewidth}\includegraphics[angle=0,width=.3\linewidth]{figs/ttorus2_convergence_setup.png}
-%\includegraphics[angle=0,width=\linewidth]{figs/ttorus2_convergence_setup.png}
-%\end{minipage}%
 \mcaption{fig:boundary-err}{
     Error convergence test solving \cref{eq:int_eq_disc} with \qbkix on the domain \cref{fig:solver-conv-test-cases}-right .}{
   We evaluate a known solution on the coarse discretization and solve for $\phi$.
@@ -670,9 +671,8 @@ On the left, we plot the maximum relative error in the infinity norm
 of $\vu^\Gamma$ evaluated on the surface. 
 On the right, we show the coarse discretization of the domain boundary
 and patches.
-%in the coarse discretization of \cref{eq:int_eq_disc}.
-}  %\vspace{-5pt}
-%\end{minipage}
+}  
+
 \end{figure}
 
 \textbf{\rbcs with collision resolution and convergence. }
@@ -696,48 +696,36 @@ collision handling  but with expensive adaptive fully implicit time-stepping to
 ensure accurate resolution of the lubrication
 layer between \rbcs. This reference simulatation used spherical
 harmonics of order 32 and the time step had to be reduced to
-6.5e-4 to prevent collisions.
+$6.5\times 10^{-4}$ to prevent collisions.
 In \cref{fig:shear-conv}, we show the convergence for the error in the centers of mass of each \rbc as a function of the time-step size. 
 We use spherical harmonic orders $16$ and $32$ for the spatial
 discretization to demonstrate the dominance of the time-stepping error. 
 We observe first-order convergence with our locally-implicit backward Euler scheme which confirms that our collision resolution algorithm does not have a significant impact on time-stepping accuracy.
 %87, 58
-\todo{add back in vesicle validation fig}
 \begin{figure}[!htb]
   \centering
   \hfill
   \begin{minipage}{.25\textwidth}
       \centering
     %\includegraphics[width=52pt,height=35pt]{shear1}
-    \includegraphics[width=.95\linewidth]{shear1}
+    \includegraphics[width=\linewidth]{shear1}
   \end{minipage}\hfill
   \begin{minipage}{.25\textwidth}
       \centering
-    \includegraphics[width=.95\linewidth]{shear2}
+    \includegraphics[width=\linewidth]{shear2}
   \end{minipage}\hfill
   \begin{minipage}{.25\textwidth}
       \centering
-    \includegraphics[width=.95\linewidth]{shear3}
+    \includegraphics[width=\linewidth]{shear3}
   \end{minipage}\hfill
   \begin{minipage}{.25\textwidth}
       \centering
-    \includegraphics[width=.95\linewidth]{shear5}
+    \includegraphics[width=\linewidth]{shear5}
   \end{minipage}\hfill
     \mcaption{fig:shear-snap}{Snapshots of two vesicles in shear flow}{ %\vspace{-5pt}
     At $T=0$, two vesicles are placed at $[-5.5, 0, 0]$ and $[0, 0, 0]$ respectively.}
 \end{figure}%
 
-%\begin{figure}[!htb]
-%  \subfloat[$t=0$\label{sfg:shear-snap1}]{\framebox(52,35){\includegraphics[width=52pt,height=35pt]{shear1}}}
-%  \hspace{1pt}
-%  \subfloat[$t=5$\label{sfg:shear-snap2}]{\framebox(52,35){\includegraphics[width=52pt,height=35pt]{shear2}}}
-%  \hspace{1pt}
-%  \subfloat[$t=20$\label{sfg:shear-snap3}]{\framebox(52,35){\includegraphics[width=52pt,height=35pt]{shear3}}}
-%  \hspace{1pt}
-%  \subfloat[$t=25$\label{sfg:shear-snap4}]{\framebox(52,35){\includegraphics[width=52pt,height=35pt]{shear5}}}
-%  \mcaption{fig:shear-snap}{}{Snapshots of two vesicles in shear flow.} \vspace{-5pt}
-%    %At $T=0$, two vesicles are placed at $[-5.5, 0, 0]$ and $[0, 0, 0]$ respectively.}
-%\end{figure}%
 \begin{figure}[!htb]
   \centering
     \includepgf{conv}
@@ -761,7 +749,7 @@ compared to the overall blood volume is 36-48\% in healthy women and
 our weak scaling simulations is below these values, which is mostly due to
 the procedure used to fill the blood vessel with \rbcs (see the
 discussion in \cref{ss:implementation}).
-However, \rbc volume fractions in capillaries and small arteries is
+However, \rbc volume fractions in capillaries and small arteries are
 known to be be around 10-20\%
 \cite{wang2013simulation,saadat2019simulation}, which our scaling
 simulations achieve.

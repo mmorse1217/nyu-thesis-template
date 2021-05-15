@@ -76,20 +76,20 @@ surface, once the equation is solved (\emph{near-singular
 %using an iterative solver like \abbrev{GMRES}.
 %However, despite the fact that \cref{eq:double_layer_int} is well-defined in the principal value sense \cite{Kress1999}, if $\vy_m \to \vy_\ell$, \cref{eq:double_layer_int_eq_patches_disc} becomes more singular.
 %This is a purely numerical phenomenon that requires a special numerical singular integration.
-\begin{figure}[h]
-\centering
-\begin{minipage}[b]{0.48\textwidth}
-    \centering
-    \includegraphics[angle=0,width=.75\linewidth]{figs/qbkix_schematic_stage5.png}
-  \mcaption{fig:hedgehog-schematic}{}{Schematic of our unified
-    singular/near-singular quadrature scheme.
-    A boundary $\Gamma$ is shown along with a set of patches (patch edges shown in black).
-    We evaluate the velocity due to $\Gamma$ at the check points (gray dots off-surface) using the fine discretization (small dots on-surface) and extrapolate these values to the target point (green). 
-    The target point may be on or near $\Gamma$.
-    The fine discretization subdivides the patches in the coarse discretization into $16$ patches, each with an $11$th-order tensor-product Clenshaw-Curtis quadrature rule.
-}
-\end{minipage}
-\end{figure}
+%\begin{figure}[h]
+%\centering
+%\begin{minipage}[b]{0.48\textwidth}
+%    \centering
+%    \includegraphics[angle=0,width=.75\linewidth]{figs/qbkix_schematic_stage5.png}
+%  \mcaption{fig:hedgehog-schematic}{}{Schematic of our unified
+%    singular/near-singular quadrature scheme.
+%    A boundary $\Gamma$ is shown along with a set of patches (patch edges shown in black).
+%    We evaluate the velocity due to $\Gamma$ at the check points (gray dots off-surface) using the fine discretization (small dots on-surface) and extrapolate these values to the target point (green). 
+%    The target point may be on or near $\Gamma$.
+%    The fine discretization subdivides the patches in the coarse discretization into $16$ patches, each with an $11$th-order tensor-product Clenshaw-Curtis quadrature rule.
+%}
+%\end{minipage}
+%\end{figure}
 We take an approach similar to \cite{klockner2013quadrature}.
 The idea is to evaluate the integral sufficiently far from the surface using the non-singular quadrature rule
 \eqref{eq:smooth_double_layer_int_eq_patches_disc} on an upsampled mesh, and then
@@ -140,7 +140,7 @@ to balance the
 error in the accuracy of $W^{\text{up}}(c_q) \cdot
 \phi^{\text{up}}$ and the extrapolation to
 $\vx$. A schematic of this quadrature procedure is shown in
-\cref{fig:hedgehog-schematic}.
+\cref{fig:qbkix-schematic}.
 %An in-depth discussion of the choice of these parameters can be found in a forthcoming paper.
 
 \textbf{Discretizing the integral equation. }

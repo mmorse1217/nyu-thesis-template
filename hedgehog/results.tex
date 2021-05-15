@@ -29,11 +29,11 @@ We also use two levels of uniform upsampling to demonstrate convergence.
   \centering
   \begin{minipage}{.5\textwidth}
       \centering
-    \includegraphics[width=.75\linewidth]{figs/cube_convergence_setup}
+    \includegraphics[width=\linewidth]{figs/cube_convergence_setup}
   \end{minipage}\hfill
   \begin{minipage}{.5\textwidth}
       \centering
-    \includegraphics[width=.75\linewidth]{figs/newtorus_convergence_setup}
+    \includegraphics[width=\linewidth]{figs/newtorus_convergence_setup}
   \end{minipage}\hfill
   \mcaption{fig:greens-id-test-cases}{Geometry and singularities used for Green's Identity convergence tests.}{ 
   Shown are polynomial patches defining boundary geometry (black lines) and point singularities
@@ -109,11 +109,11 @@ Torus                                         & Laplace         &  $2729$  &  $3
   \hfill
   \begin{minipage}{.5\textwidth}
       \centering
-    \includegraphics[width=.75\linewidth]{figs/pipe_convergence_setup}
+    \includegraphics[width=\linewidth]{figs/pipe_convergence_setup}
   \end{minipage}\hfill
   \begin{minipage}{.5\textwidth}
       \centering
-    \includegraphics[width=.75\linewidth]{figs/ttorus2_convergence_setup}
+    \includegraphics[width=\linewidth]{figs/ttorus2_convergence_setup}
   \end{minipage}\hfill
     \mcaption{fig:solver-conv-test-cases}{Geometry and singularities used for solver convergence tests.}{ Figures are similar to \cref{fig:greens-id-test-cases}, but displaying geometries for testing the convergence of \qbkix within a \gmres solver.
   We use 30 16th-order polynomial patches for the pipe (left) and 50 20th-order patches for the genus two surface (right). 
@@ -189,7 +189,7 @@ We include the spheroid example as an additional demonstration of a high accurac
 We report the number of target points evaluated per second per core with two-sided \qbkix in \cref{table:solver-perf-data}.
 The results are similar to \cref{table:greens-id-perf-data}; the slower performance is because evaluation via two-sided \qbkix is more expensive than one-sided \qbkix.
 \subsection{Comparison with \cite{YBZ}\label{sec:results-compare}}
-In this section,  we compare our method to \cite{YBZ}, a previously proposed high-order, kernel-independent singular quadrature method in \threed for complex geometries. These characteristics are similar to  \qbkix shares these characteristics. \cite[Section 4]{morse2020bsupplementary} presents additional comparisons.
+In this section,  we compare our method to \cite{YBZ}, a previously proposed high-order, kernel-independent singular quadrature method in \threed for complex geometries. These characteristics are similar to  \qbkix shares these characteristics. \cref{app:results-compare} presents additional comparisons.
 
 %To understand the performance of these two methods and see the implications of this complexity difference in practice, we now compare the performance of \qbkix with that of \cite{YBZ} on several concrete numerical examples.
 

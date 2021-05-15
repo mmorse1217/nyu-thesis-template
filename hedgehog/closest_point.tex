@@ -1,10 +1,10 @@
 
-\section{Find the closest point on a patch  \label{app:closest_point}}
+\section{Computing the closest point on a patch  \label{app:closest_point}}
 %\subsection{Optimization\label{app:closest_point_opt}}
 %\begin{figure}%[!htb]
 %  \centering
-%    \includegraphics[width=.5\linewidth]{figs/inkscape/newton-opt.pdf}
-%    \mcaption{fig:newton-opt}{Newton's optimization schematic}{\note[MJM]{write me}}
+%    \includegraphics[width=.5\linewidth]{figs/newton-opt.pdf}
+%    \mcaption{fig:newton-opt}{Closest point optimization schematic}{}
 %\end{figure}
 We include our algorithm to find the closest point $\vy$ on a patch $\vP$ to a point $\vx \in \mathbb{R}^3$ in the section for completeness.
 For a surface or quadrature patch $\vP$ and point $\vx \in \mathbb{R}^3$, 
@@ -87,3 +87,4 @@ This final algorithm to compute the closest point is as follows:
 \end{enumerate}
 This gives us an algorithm to compute the closest point on a quadrature patch $\vP$ to $\vx$.
 The \oned and \twod Newton minimizations converge in ten iterations on average.
+

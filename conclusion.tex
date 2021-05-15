@@ -1,3 +1,23 @@
 
-We have a presented a boundary integral equation-based simulation framework for realistic blood flows.
-\todo{conclusion}
+We have a scalable simulation platform with for \rbc flows through capillaries using boundary integral equations. 
+We first presented a robust solver for elliptic \pdes on \threed rigid geometries. 
+We thoroughly studied the behavior and performance of this solver on a variety of geometries and compared it with a competitive state-of-the-art solver.
+We then parallelized the solver, combined it with boundary integral-based vesicle simulation algorithms and adapted collision-free time stepping to include rigid boundaries.
+We have scaled our simulations and the parallel solver to thousands of cores and demonstrated the practicality of using such simulations to reproduce qualitatively representative physical \rbcs flows.
+
+\section{Future Work}
+The comparison between \qbkix and \cite{YBZ} in \cref{sec:results-compare} demonstrated the efficiency of a local quadrature scheme compared to a global one. 
+Moreover, the scaling results in \cref{ss:scalability} demonstrate that parallel \qbkix is the dominant cost of the simulation.
+In order to scale \rbc simulations beyond the regime explored here, the parallel boundary solver needs to be improved. 
+A key improvement will be the adpotion of a \textit{local} singular quadrature approach.
+Parallel scaling is largely determined by communication costs and \qbkix performs parallel communication entirely through \pvfmm. 
+Reducing the number of total points passed to \pvfmm is the best way to improve parallel scaling, since this reduces the overall size of the distributed octree.
+The local corrections to an inaccurate \fmm evaluation can be highly vectorized and require no additional parallel communication.
+Moreover, the local corrections can be precomputed when solving the integral equation with \gmres. 
+These two facts will dramatically increase the performance of \qbkix.
+
+The other main area for improvement is in extrapolation procedure of \qbkix. 
+Equally spaced points serve as a fairly bad interpolant, but we have shown that we're able to use low order polynomials to extrapolate reliably.
+An important question in the future of \qbkix is how to construct an optimal \oned extrapolation procedure for harmonic functions.
+An equally important concern is the scheme's inability to resolve oscillatory \pdes such as the Helmholtz equation.
+A trigonometric extrapolation procedure, coupled with a sampling rate comensurate with the solution's underlying frequency, is one possible approach.
