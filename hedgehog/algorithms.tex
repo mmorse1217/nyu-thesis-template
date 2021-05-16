@@ -262,12 +262,12 @@ This bounding box can then be inserted into the \aabb tree as a proxy for a surf
 
 To find a candidate closest patch $\vP_{i_0}$ to $\vx$, we construct a fine triangle mesh and bounding boxes of each patch in $\Pcoarse$ and insert them into an \aabb tree.
 We can query the \aabb tree for the nearest triangle to $\vx$ with the \aabb tree, which corresponds to $\vP_{i_0}$.
-We then compute the accurate true distance $d_{i_0}$ to $\vP_{i_0}$ using a constrained Newton method, presented in detail in \cite[Section 2]{morse2020bsupplementary}.
+We then compute the accurate true distance $d_{i_0}$ to $\vP_{i_0}$ using a constrained Newton method, presented in detail in \cref{app:closest_point}.
 
 However, there may be other patches whose distance to $\vx$ is less than $d_{i_0}$, as shown in \cref{fig:candidate-near-patch}.
 To handle this case, we then query the \aabb tree for all patches $\vP_{i_1}, \hdots, \vP_{i_k}$ that are distance at most $d_{i_0}$ from $\vx$.
 This is achieved by forming a query box centered at $\vx$ with edge length $2d_{i_0}$ and querying the \aabb tree for all intersection bounding boxes. 
-The precise distance is then computed for each patch  $\vP_{i_1}, \hdots, \vP_{i_k}$ with \cite[Section 2]{morse2020bsupplementary} and the smallest distance is chosen.
+The precise distance is then computed for each patch  $\vP_{i_1}, \hdots, \vP_{i_k}$ with \cref{app:closest_point} and the smallest distance is chosen.
 We summarize this process in \cref{alg:closest_point}.
 
 
@@ -391,7 +391,7 @@ To compute the upsampled patch set from $\Pcoarse$, we initially set $\Pfine = \
 We also construct the set of check points $C$ required to evaluate our discretized layer-potential with \qbkix (\cref{sec:singular-eval}).
 For each check point $\vc \in C$, we query the \aabb tree for all near-zone bounding boxes that contain $\vc$.
 If there are no such boxes, we know $\vc$ is far from all quadrature patches and can continue.
-If, however, there are near-zone bounding boxes $B_{i_0},\hdots, B_{i_k}$ containing $\vc$, we compute the distances $d_{i_k}$ from $\vc$ to $\vP_{i_1},\hdots,\vP_{i_k}$ using \cite[Section 2]{morse2020bsupplementary}.
+If, however, there are near-zone bounding boxes $B_{i_0},\hdots, B_{i_k}$ containing $\vc$, we compute the distances $d_{i_k}$ from $\vc$ to $\vP_{i_1},\hdots,\vP_{i_k}$ using \cref{app:closest_point}.
 If $d_{i_k} < L(\vP_{i_k})$, we replace $\vP_{i_k}$ in $\Pfine$ with its four children produced by quadrisection.
 
 

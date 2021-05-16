@@ -16,8 +16,29 @@ The local corrections to an inaccurate \fmm evaluation can be highly vectorized 
 Moreover, the local corrections can be precomputed when solving the integral equation with \gmres. 
 These two facts will dramatically increase the performance of \qbkix.
 
-The other main area for improvement is in extrapolation procedure of \qbkix. 
+Another area for improvement is in extrapolation procedure of \qbkix. 
 Equally spaced points serve as a fairly bad interpolant, but we have shown that we're able to use low order polynomials to extrapolate reliably.
 An important question in the future of \qbkix is how to construct an optimal \oned extrapolation procedure for harmonic functions.
 An equally important concern is the scheme's inability to resolve oscillatory \pdes such as the Helmholtz equation.
 A trigonometric extrapolation procedure, coupled with a sampling rate comensurate with the solution's underlying frequency, is one possible approach.
+
+Several algorithms in \cref{sec:algo} can be improved. 
+The closest point algorithm in \cref{app:closest_point} can be dramatically improved by leveraging subdivision properties of the B\'ezier surface representation.
+We can compute the closest point to the control points of a patch, subdivide the patch, and recursively repeat the process to arrive at more accurate initial guess for the closest point for the \twod Newton method in \cref{app:closest_point}. 
+This guess can further cull the \oned optimizations based on the quadrant of the initial guess.
+Preliminary investigation shows that this outperforms the method detailed in \cref{app:point_marking}.
+
+The point marking algorithm in \cref{app:point_marking} and the upsampling algorithm in \cref{sec:adaptive_upsampling_algo} are based on near-zone bounding boxes.
+A proper quadrature error heuristic similar to \cref{aT2} would dramatically reduce the amount of upsampling required to guarantee the accuracy of \qbkix. 
+This would improve the third plot in \cref{fig:full-algo-perf} and more accurately determine which points require evaluation via \qbkix, both of which will reduce overall cost.
+The approach taken in \cite{klinteberg2020quadrature} shows exceptional promise toward this end.
+
+The refinement algorithms in \cref{sec:adaptive_upsampling_algo,sec:admissible_algo} require parallelization for \qbkix to be a useful computational tool. 
+This requires minor changes to the parallel closest point algorithm in \cref{sec:closest_point} and the parallel near-pair algorithm in \cref{sec:parallel-contact}.
+
+Recent work \cite{wang2021benchmark} has demonstrated that the collision detection scheme in \cite{Harmon2011} used in \cref{chp:bloodflow} and \cite{lu2019scalable,lu2018parallel} seems to miss collisions with large separation distances. 
+It appears from \cite[Section 6]{wang2021benchmark} that \cite{Harmon2011} entirely misses a relatively large number of collisions across all datasets.
+The collision geometries in \cref{chp:bloodflow} are quite benign compared to the datasets in \cite{wang2021benchmark}, since \rbcs and vessels are represented by spherical harmonics and high order polynomials, respectively.
+Though we verify a collision-free state at each time step in \cref{chp:bloodflow}, addressing this shortcoming is crucial.
+\cite{li2020incremental} is a viable approach, but requires \rbc volume meshing. 
+Incorporating an elastic boundary physical model into \cite{li2020incremental} and parallelizing it is a key step in simulating more complex geometries or sharp rigid particulates. 
