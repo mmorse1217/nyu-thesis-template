@@ -90,7 +90,6 @@ The Galerkin and collocation approaches are commonly referred to as \textit{boun
 There have been many optimized \bem implementations for elliptic (Laplace, Helmholtz) and Maxwell problems. 
 One such implementation is \bem++, presented in \cite{smigaj2015solving}, with extensions for adaptivity added in \cite{bespalov2019adaptive,betcke2019adaptive}.
 \cite{chaillat2017fast,chaillat2017theory} present iterative solvers for high-frequency scattering problems in elastodynamics, based on a \bem implementation coupled with fast summation methods to enable accurate solutions on complex triangle meshes.
-\cite{abduljabbar2019extreme} outlines a fast exascale \bem solver for soft body acoustic problems in \threed, also on triangle meshes.
 For a more complete background of \bem, we refer the reader to \cite{steinbach2007numerical}.
 
 A significant advancement in the field of finite element methods, called \textit{isogeometric analysis} (\iga)\cite{hughes2005isogeometric}, has been recently applied to boundary integral formulations.  
@@ -107,6 +106,7 @@ This methodology was applied to general elliptic \pdes in \cite{YBZ} and coupled
 Recently, \cite{malhotra2019taylor} demonstrated that the choice of partition of unity function used for the change of variables has a dramatic effect on overall convergence order, although not in the context of elliptic \pdes.
 The first singularity cancellation scheme in \threed on general surfaces composed of piecewise smooth triangles was presented in \cite{bremer2012nystrom,bremer2013numerical} by splitting a triangle into three subtriangles at the singularity and computing a polar integral on each new triangle.
 \cite{ganesh2004high} introduced a change of variables method for acoustic scattering on \threed surfaces parametrized by spherical coordinates by integrating over a rotated coordinate system that cancels out the singularity.
+\cite{abduljabbar2019extreme} outlines a fast exascale solver for soft body acoustic problems on triangle meshes \threed and using Duffy transforms as for singular/near-singular quadratures.
 
 Asymptotic correction methods study the inaccuracies due to the singular \pde kernel with asymtotic analysis and apply a compensating correction. % which removes the singularity in the integrand but introduces errors in solution; corrections are applied to ensure high-order accuracy.
 \cite{beale2004grid,beale2016simple,tlupova2019regularized} compute the integral with a regularized kernel and add corrections for regularization and discretization for the single and double layer Laplace kernel in \threed, along with the Stokeslet and stresslet in \threed.

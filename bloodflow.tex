@@ -8,7 +8,7 @@ After parallelizing the boundary solver from \cref{chp:hedgehog}, we approximate
 The remaining challenging task of the simulation is robust, cost-efficient time stepping.
 Large timesteps are known to cause interpenetration, or \textit{collisions}, between discretized cells.
 Handling these collisions without introducing artifical errors is critical in long-time flow simulations.
-We use the parallel collision handling framework of \todo{libin jcp paper} and extend it to arbitrary ridid bodies to allow for large collision-free time steps among the cells and betweeen cells and the blood vessel wall.
+We use the parallel collision handling framework of \cite{lu2018parallel} and extend it to arbitrary static rigid bodies to allow for large collision-free time steps among the cells and betweeen cells and the blood vessel wall.
 We study the strong and weak scaling behavior of our platform up to 34,816 cores with good parallel efficiency.
 
 \input{bloodflow/intro}

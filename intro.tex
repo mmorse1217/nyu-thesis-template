@@ -54,11 +54,16 @@ This imposes a final computational challenge: in order to simulate several micro
 Achieving algorithmic complexity proportional to the number of cells size while guaranteeing robustness and high accuracy is a tall order.
 Moreover, the representation of millions of \rbcs and the blood vessel vastly exceeds the memory capcity of a single machine, so distributed algorithms are needed to complete the simulation with reasonable walltime.
 
-\todo{Work that tries to do this but misses the mark}
-\begin{itemize}
-    \item \todo{related work on low accuracy scalable blood flow}
-    \item \todo{related work on BIE for blood flow}
-\end{itemize}
+There has been a vast amount of work trying to address these shortcomings. 
+There are many works successfully scaling blood flow simulations up to hundreds of thousands \cite{grinberg2011new,rossinelli2015silico} or even millions \cite{gounley2017computational,randles2015massively} of cores.
+While these methods are able to simulate immense complex geometries, the particle-based simulation approaches taken in these papers, such as lattice Boltzmann and dissipative particle dynamics, naturally incur very high numerical errors.
+It remains to be seen whether these errors allow such methods to recover small-scale qualitative behaviors of \rbc flows.
+
+On the other extreme, many recent works have focused on producing highly accurate numerical algorithms of deformable particulate flows using the \textit{boundary integral equation method} \cite{Veerapaneni2009b,Veerapaneni2011,rahimian2015,sorgentone2018highly,sorgentone20193d,af2016fast,Zhao2010}.
+Several works \cite{lu2018parallel,Malhotra2017,rahimian2010petascale} have produced scalable parallel versions of these algorithms applied to \rbcs with great success.
+However, the majority of this work involved free-space or periodic boundary conditions, which are not relevant in a realistic biophysical setting.
+Similar mathematical formulations can be applied to simulating elliptic \pdes \cite{YBZ,wala20183d,wala2018optimization,bruno2013high}, providing efficient, accurate numerical solutions on complex geometries.
+A recent paper has leverage these principles into an exascale parallel acoustic scattering simulation \cite{abduljabbar2019extreme}, which along with \cite{rahimian2010petascale} demonstrate that large scale \bie approaches are achievable.
 
 \section{Overall Approach}
 Motivated by our previous discussion of the physical properties of \rbc flows, we approximate the physical behavior of individual \rbcs by vesicles and assume that the surrounding fluid is highly viscous and Newtonian.
@@ -66,7 +71,7 @@ We will refer to \rbcs and vesicles interchangeably throughout the remainder of 
 The blood vessel is a rigid closed fluid-filled domain. 
 However, such flows are far too complex for analytic solutions and require numerical simulation to study any large system of biological significance.
 
-Since the \rbcs and blood vessel are both bounded by smooth surfaces, we adpot a \textit{boundary integral formulation} of the fluid flow through the vessel.
+Since the \rbcs and blood vessel are both bounded by smooth surfaces, we adopt a \textit{boundary integral formulation} of the fluid flow through the vessel.
 In brief, a boundary integral formulation allows us to express the fluid velocity at a point in the blood vessel as a sum of integrals, each one defined on the distinct surfaces bounding the fluid.
 We can evaluate these integrals on the surface of \rbcs and advect them along the fluid's trajectory. 
 
