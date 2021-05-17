@@ -10,7 +10,7 @@
 % ----------------------------------------
 
 % Use or comment this to enable/disable draft version
-%\def\draftversion{}
+\def\draftversion{}
 \newcommand{\draftfinal}[2]{\ifdefined\draftversion#1\else#2\fi}
 \newcommand{\draftonly}[1]{\draftfinal{#1}{}}
 \newcommand{\finalonly}[1]{\draftfinal{}{#1}}
