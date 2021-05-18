@@ -1,5 +1,19 @@
 % Replace this with your abstract:
-Abstract here...
+
+Numerical simulation of red blood cell flows through capillaries is a important investigational tool in biophysics and the biological sciences more broadly.
+The ability to rapidly evaluate the impact of blood vessel and cell geometries, plasma viscosity, and particulate densities on macroscopic physiology, which physical simulation provides, is crucial to pursuing further biological understanding.
+
+In this work, we construct such a simulation, capable of simulating microliters of blood flowing through realistic vasculature.
+Due to the micrometer length scales of typical capillaries, we can model the blood plasma as a Stokesian fluid and red blood cells as inextensible, deformable membranes called vesicles.
+By reformulating the viscous flow as a set of boundary integral equations, we are able to produce a method that is optimal complexity, high-order accurate, and capable of handling dense particulate suspensions in complex geometries.
+
+A key component of the blood flow simulation is a robust solver for elliptic partial differential equations, applied to Stokes flow.
+A core component is a fast algorithm to compute the value of the solution near and on the domain boundary, known as \qbkix.
+We provide a set of algorithms to enforce the accuracy of \qbkix on piecewise smooth surfaces.
+Leveraging this solver in a confined blood flow simulation involves advecting particulates along the resulting flow. 
+Large timesteps are required for an efficient simulation, but performed naively can cause collisions among cells and with the vessel wall. 
+We extending collision detection and prevention algorithms to include the blood vessel.
+We parallelize the fluid solver and the collision detection algorithm and scale it to thousands of cores.
 
 %%% Local Variables:
 %%% mode: latex
