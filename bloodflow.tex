@@ -1,12 +1,12 @@
 In this chapter, we construct a scalable, high-fidelity simulation platform for red blood cell flows through capillaries.
-It is based on the work \cite{lu2019scalable} with Libin Lu, Abtin Rahimian, Georg Stadler and Denis Zorin.
+It is based on the joint work \cite{lu2019scalable} with Libin Lu, Abtin Rahimian, Georg Stadler and Denis Zorin.
 Portions of this chapter also appear in \cite{lu2019parallel}.
 
-While there have been many large scale or numerically accurate blood flow simulations in the past, there has been little work attempting to handle both computational regimes simultaneously.
+While there have been many large scale or numerically accurate blood flow simulations in the past, there has been little work attempting to handle both numerical regimes simultaneously.
 After parallelizing the boundary solver from \cref{chp:hedgehog}, we approximate red blood cells as \textit{vesicles}: deformable inextensible membranes without in-plane shear forces.
 
 The remaining challenging task of the simulation is robust, cost-efficient time stepping.
-Large timesteps are known to cause interpenetration, or \textit{collisions}, between discretized cells.
+Large timesteps are known to cause interpenetration, or \textit{collisions}, between discretized bodies.
 Handling these collisions without introducing artifical errors is critical in long-time flow simulations.
 We use the parallel collision handling framework of \cite{lu2018parallel} and extend it to arbitrary static rigid bodies to allow for large collision-free time steps among the cells and betweeen cells and the blood vessel wall.
 We study the strong and weak scaling behavior of our platform up to 34,816 cores with good parallel efficiency.

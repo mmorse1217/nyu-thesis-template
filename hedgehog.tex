@@ -1,11 +1,11 @@
 
 This chapter introduces a simple, high-order boundary solver for elliptic partial differential equations (\pdes) in \threed complex geometries called \qbkix.
-It is based on the work \cite{morse2020robust} with Abtin Rahimian and Denis Zorin.
+It is based on the joint work \cite{morse2020robust} with Abtin Rahimian and Denis Zorin.
 
 Boundary integral equation methods have many computational advantages over conventional approaches, but the necessity of evaluating singular/near-singular integrals remains a complicated challenge.
 The main contribution of \qbkix is its algorithmic simplicity.
 The singular/near-singular quadrature scheme decouples quadrature evaluation from the regularization required to accurately evaluate layer potentials.
-\qbkix only requires values of the solution at points, which can be computed with a standard point \fmm.
+\qbkix only requires values of the solution at prescribed points, which can be computed with a standard point \fmm.
 This overcomes a key hurdle in the development of fast singular quadrature methods.
 
 This elliptic \pde solver ultimately allows us to solve Laplace, Stokes and linear elasticity equations in complex geometries.
