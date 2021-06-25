@@ -1,23 +1,28 @@
 
 Microscale particulate flows play a central role in many biophysical settings.
-In particular, red blood cell flows through vasculature can be modeled by such a flow: a suspension of deformable particles in a Newtonian fluid.
+Red blood cell flows through vasculature in particular can be modeled in this fashion by a suspension of deformable particles in a Newtonian fluid.
 A clear understanding blood circulation through capillaries would shed light on important yet complex phenomena such as vasodilation, vasoconstriction, thrombosis and clotting.
-The ability to simulate such flows with modern computers provides a means to computationally investigate these phenomena with an unprecedented level of control and resolution. 
+The ability to simulate such flows with modern computers enables computational investigation of these phenomena with an unprecedented level of control and resolution. 
 This is a crucial milestone in the next generation of biological innovation.
 
-The computational tools required for blood flow simulations can also be applied in other biological settings.
-By simulating a deterministic lateral displacement microfluidic chip \todo{cite what this is}, one can optimize the device geometry through simulation and avoid the typical expensive trial-and-error design process through manufacturing \cite{kabacaouglu2019sorting}.
-By simulating intra-cellular dynamics of organelles, researchers can gain insights into biophysical dynamics by adjusting model formulations and infer biological behaviors by comparing experimental and computational results \cite{nazockdast2017cytoplasmic}. 
+The computational tools required for blood flow simulations can also be applied in many other biological settings.
+By simulating a deterministic lateral displacement microfluidic chip \cite{mcgrath2014deterministic}, one can optimize the device geometry through simulation and avoid the typical expensive trial-and-error design process through manufacturing \cite{kabacaouglu2019sorting}.
+Researchers simulating intra-cellular dynamics of organelles can gain insights into biophysical dynamics by adjusting model formulations and infer biological behaviors by comparing experimental and computational results \cite{nazockdast2017cytoplasmic}. 
 Advanced devices like optical tweezers \cite{zhong2013trapping} and techniques like laser ablation \cite{yu2014measuring} can be used to isolate and study single cells or bacteria, but can cost tens of thousands of dollars.
 Better computational tools can simulate more complex systems, which will rapidly increase the pace of biological innovation while reducing cost.
 %In this work, however, we will restrict our attention to red blood cell (\rbc) flows through capillaries.
 
-In this work, we present a robust scalable platform to simulate red blood cell (\rbc) flows through capillaries. 
+In this work, we present a robust scalable platform to simulate complex flows of deformable particulates and apply the methodology to red blood cell (\rbc) flows through capillaries. 
 We first construct a solver for elliptic partial differential equations (\pdes) that robustly handles complex geometries.
-We then parallelize this solver and integrate it with a collision-free time stepping scheme to advect \rbcs along the flow trajectory.
+We then parallelize this solver and integrate it with a collision-aware time stepping scheme to advect \rbcs along the flow trajectory.
 We scale this solver to nearly 35,000 cores and millions of \rbcs, demonstrating its ability to capture high fidelity real-world biological phenomena.
 
 \section{Background}
+The methodology presented in this thesis is applicable to a broad range of applications, such as microfluidic chip design \cite{mcgrath2014deterministic}, neurotransmission via synaptic vesicles \cite{gan2018synaptic}, surfactant laden drops 
+\cite{schramm20032,sorgentone2018highly} in cosmetics \cite{lourith2009natural}, pharmaceutics \cite{lourith2009natural}, petroleum engineering \cite{schramm2000surfactants}, among others.
+Moreover, the model presented here accurately captures the dynamics of many types of biological cells, such as vacuoles, transport and secretory vesicles, lysosomes \cite{carreira2017development}, enveloped viruses \cite{barenholz1976enveloped} and gas bubbles released from bacteria to maintain buoyancy \cite{pfeifer2012distribution}.
+We restrict our focus here to red blood cell flow \cite{Veerapaneni2009} to highlight its applicability.
+
 The fluid dynamics of blood flow, or \textit{hemodynamics}, spans several regimes. 
 The first regime is in larger veins and arteries and in regions near the heart, where impact of \rbcs on flow dynamics are largely negligible and blood can be well characterized as a non-viscous continuum. 
 The second flow regime is at very small length scales ($\leq 80 \mu$m \cite{potter1983capillary}) such as capillaries, called microcirculation.
@@ -32,11 +37,13 @@ As such, we will focus on microcirculation in this work, since target applicatio
 They contain no nucleus or mitochondira, in order to maximize their capacity to transport hemoglobin \cite{zhang2011red} and have a biconcave shape at rest to maximize large-scale lamniar flow and minimize platelet scattering \cite{uzoigwe2006human}.
 Most importantly, \rbcs are highly \textit{deformable}, allowing them to travel through capillaries much narrower than their resting diameter \cite{huisjes2018squeezing}.
 Macroscopic physiological mutations, such as sickle cell anemia and thalassemia, are known to impact the degree of \rbc deformability \cite{huisjes2018squeezing}, indicated its importance in the overall dynamics.
-This deformability, along with its elastic resilience, comes from the constituents of its thin cell membrane: the cytoskeleton and a phospholipid bilayer.
-Due to the complex membrane structure, \rbc membranes are also extremely resistant to in-plane shear forces and membrane extension \cite{lee2008theoretical}.
-Together, these characteristics allow \rbc flow dynamics to be well-approximated by a thin, deformable, inextensible membrane filled with a viscous Newtontian fluid called a \textit{vesicle} \cite{sackmann1996supported,kraus1996fluid}.
+%This deformability, along with its elastic resilience, comes from the constituents of its thin cell membrane: the cytoskeleton and a phospholipid bilayer.
+\rbc membranes are also resistant to in-plane shear forces and membrane extension, with shear forces $50\times$ and extensional forces $10^6\times$ smaller than bending forces \cite{lee2008theoretical}.
+Together, these characteristics allow \rbc flow dynamics to be approximated by a thin, deformable, inextensible membrane filled with a viscous Newtontian fluid called a \textit{vesicle} \cite{sackmann1996supported,kraus1996fluid}.
+While modeling an \rbc as a vesicle neglects the contribution of in-plane shear forces, they serve as an effective qualitative model of \rbc.
+In some scenarios, shear forces can have a significant contribution to the overall flow dynamics \cite{mills2004nonlinear,horobin2019red}, but in more typical physiological regimes, their contribution is small.
 
-In summary, in order to faithfully model microcirculation through capillaries, our model must:
+In summary, in order to model microcirculation through capillaries, our model must:
 \begin{itemize}
     \item represent blood plasma as a viscous Newtontian fluid within a blood vessel
     \item approximate \rbcs as a thin, deformable, fluid-filled membrane 
@@ -44,7 +51,7 @@ In summary, in order to faithfully model microcirculation through capillaries, o
 \end{itemize}
 
 \section{Challenges}
-To faithfully simulate \rbc flows, there are several outstanding computational obstacles.
+To faithfully simulate complex particulate flows, there are several outstanding computational obstacles.
 The first is \textit{robustness}: can we design a set of algorithms that can handle arbtitrary flows?
 Typical flows are characterized by complex vascular geometry with rapidly varying curvature, high-volume fraction flows (>45\% in humans) and long simulation times. 
 This will result in nearly-touching and potentially colliding geometries that causes many standard simulation approaches to fail; our algorithms need to handle these adversarial cases.
@@ -57,7 +64,7 @@ This imposes a final computational challenge: in order to simulate several micro
 Achieving algorithmic complexity proportional to the number of cells size while guaranteeing robustness and high accuracy is a tall order.
 Moreover, the representation of millions of \rbcs and the blood vessel vastly exceeds the memory capcity of a single machine, so distributed algorithms are needed to complete the simulation with low wallclock times.
 
-There has been a vast amount of literature trying to address these shortcomings, many successfully scaling blood flow simulations up to hundreds of thousands \cite{grinberg2011new,rossinelli2015silico} or even millions \cite{gounley2017computational,randles2015massively} of cores.
+There has been a vast amount of literature trying to address these challenges, many successfully scaling blood flow simulations up to hundreds of thousands \cite{grinberg2011new,rossinelli2015silico} or even millions \cite{gounley2017computational,randles2015massively} of cores.
 While these methods are able to simulate immense, complex geometries, the particle-based simulation approaches taken in these papers, such as Lattice Boltzmann methods and dissipative particle dynamics, naturally incur very high numerical errors.
 It remains to be seen whether these errors allow such methods to recover small-scale qualitative behaviors of \rbc flows.
 
@@ -73,13 +80,13 @@ We will refer to \rbcs and vesicles interchangeably throughout the remainder of 
 The blood vessel is approximated by a rigid closed fluid-filled domain. 
 However, such flows through arbtitrary vessel geometries are far too complex for analytic solutions and require numerical simulation to study any large system of biological significance.
 
-Since the \rbcs and blood vessel are both bounded by smooth surfaces, we adopt a \textit{boundary integral formulation} of the fluid flow through the vessel.
+We adopt a \textit{boundary integral formulation} of the fluid flow through the vessel.
 In brief, a boundary integral formulation allows us to express the fluid velocity at a point in the blood vessel as a sum of integrals, each defined on the distinct surfaces bounding the fluid.
 We can evaluate these integrals on the surface of \rbcs and advect them along the fluid's trajectory. 
 
 This approach has many advantages. 
 It avoids discretizing the fluid volume and avoids the expensive, error-prone process of remeshing at each timestep.
-We are able to leverage quadrature methods for smooth functions to integrate with high accuracy.
+We are able to leverage quadrature methods for smooth functions to integrate with high accuracy, with \rbcs and the blood vessel are defined by smooth surfaces.
 Well-formulated integral equations have favorable conditioning when discretized, allowing iterative solvers like \gmres to converge in a constant number of steps.
 With an appropriate discretization, fast summation methods such as the Fast Multipole Method (\fmm) can compute matrix-vector products of the resulting linear system matrix with optimal complexity.
 
@@ -87,20 +94,18 @@ The primary difficulty introduced by the boundary integral formulation is the ne
 These integrals are well-defined mathematically, but standard numerical quadrature methods fail to resolve their true value.
 Special algorithms are required in order to accurately evaluate such integrals.
 
-Two recent papers \cite{barnett2014evaluation,KBGO} introduce a straightforward method called \textit{Quadrature by Expansion}, or \qbx, that approximates a singular/near-singular integral with a local expansion, whose coefficients are defined by smooth integrals.
-\qbx has evolved rapidly since, with variations \cite{ST,aT1,RBZ,af2016fast} and analyses \cite{EGK,aT2,klinteberg2020quadrature} for various \pdes and fast accelerations \cite{RKO,wala20193d,wala2019optimization,wala2020approximation}.
-Although several \threed implementations have been developed, \cite{ST, wala2019optimization,wala2020approximation, wala20193d}, \threed solvers have been tested on relatively benign geometries.
-In practical engineering scenarios, geometries often come from CAD files based on splines or B\'ezier curves that have rapidly varying curvatures and nearly touching, non-local surface patches.
-Moreover, the large scale nature of realistic problems require efficient and scalable parallel implementations to be competitive with state-of-the-art finite element implementations.
+Recent work \cite{barnett2014evaluation,KBGO} introduced an elegant and intuitive method called \textit{Quadrature by Expansion}, or \qbx, which approximates a singular/near-singular integral with a local expansion, whose coefficients are defined by smooth integrals.
+\qbx has evolved rapidly since, with variations \cite{ST,aT1,RBZ,af2016fast}, analyses \cite{EGK,aT2,klinteberg2020quadrature} for various \pdes and fast algorithmic accelerations \cite{RKO,wala20193d,wala2019optimization,wala2020approximation}.
+Although several \threed implementations have been developed, \cite{ST, wala2019optimization,wala2020approximation, wala20193d}, the large scale nature of realistic problems require efficient and scalable parallel implementations to be competitive with state-of-the-art finite element implementations.
+Moreover, in practical engineering scenarios, geometries often come from CAD files based on splines or B\'ezier curves that have rapidly varying curvatures and nearly touching, non-local surface patches, while most current \qbx methods rely on special function representations of local geometry.
 
-There is also a rich literature regarding vesicle simulations based on boundary integral formulations \cite{Veerapaneni2009,Veerapaneni2009b,Veerapaneni2011,ghigliotti2011,lu2017,rahimian2010petascale,rahimian2015,lu2018parallel,Malhotra2017,sorgentone2018highly,sorgentone20193d}.
-Fast and accurate parallel algorithms have been developed and scaled to thousands of cores. 
-However, much is this work is either in \twod \cite{Veerapaneni2009,Veerapaneni2009b,Veerapaneni2011,lu2017} or a free-space or periodic setting in \threed \cite{rahimian2010petascale,rahimian2015,lu2018parallel,Malhotra2017,sorgentone2018highly,sorgentone20193d}.
+There is also a rich literature regarding vesicle simulations based on boundary integral formulations \cite{Veerapaneni2009,Veerapaneni2009b,Veerapaneni2011,ghigliotti2011,rahimian2015,lu2017,sorgentone2018highly,sorgentone20193d}.
+Fast and accurate parallel algorithms have been developed and scaled to thousands of cores \cite{lu2018parallel,rahimian2010petascale,Malhotra2017}. 
+However, much of this work is either in \twod \cite{Veerapaneni2009,Veerapaneni2009b,Veerapaneni2011,lu2017} or a free-space or periodic setting in \threed \cite{rahimian2010petascale,rahimian2015,lu2018parallel,Malhotra2017,sorgentone2018highly,sorgentone20193d}.
 To recover qualitative properties of \rbc flows, the vesicles need to simulated in a confined flow with representative vessel geometries (i.e., more complicated than a cylinder/torus).
 
 \section{Contributions and Outline}
-This thesis overcomes these obstacles, resulting in a practical simulation platform for realistic \rbc flows through capillaries.
-In particular, this thesis will proceed as follows.
+This thesis addresses these challenges, resulting in a practical simulation platform for realistic \rbc flows through capillaries.
 
 In \Cref{chp:hedgehog}, we introduce an $O(N)$ high-order solver for elliptic \pdes in \threed geometries.
 The core component of the solver is \qbkix, a straightforward \pde-independent singular/near-singular quadrature scheme for layer potentials arising from \pdes defined on domains with spline-based boundaries.
@@ -108,11 +113,11 @@ We design adaptive geometric preprocessing and query algorithms to gurantee the 
 We evaluate the method on a variety of complex geometries and boundary conditions and stress test it on several challenging geometries
 This is based on the work in \cite{morse2020robust}.
 
-In \Cref{chp:bloodflow}, we present a robust scalable bloodflow simulation platform. 
+In \Cref{chp:bloodflow}, we present a robust scalable \rbc flow simulation platform. 
 We parallelize the \pde solver presented in \cref{chp:hedgehog} to scale to thousands of processors.
 We then integrate this with several parallel \rbc simulation libraries. 
 In partiular, we extend a collision-free time-stepping scheme for deformable bodies to also handle rigid boundaries.
 We explore strong and weak scaling of our plaform and scale this simulation to thousands of cores.
-This is based on the work in \cite{lu2019scalable}.
+This is based on the work in \cite{lu2019scalable} in collaboration with Libin Lu \cite{lu2019parallel}.
 
 In \Cref{chp:conclusion}, we summarize the thesis and discuss possible future directions of research.

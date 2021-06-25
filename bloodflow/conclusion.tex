@@ -14,30 +14,13 @@ we solve a nonlinear complementarity problem in the implicit part of
 each time step. This requires repeated assembly of sparse matrices that, in
 principle, couple all cells globally. Nevertheless, solving this
 complementarity system yields close-to-optimal strong
-and weak scaling in our tests. Overall, the vast majority of compute
-time is spent in \fmm evaluations, which implies that the scaling behavior of our
-simulation is dominated by the scalability of the \fmm implementation.
-As discussed at the end of \cref{ss:scalability}, in the
-future, we will employ a local singular quadrature scheme that will
-allow us to significantly reduce the time spent in \fmm evaluations. This
-will not only speed up the overall simulation but
-also improve the weak and strong scalability of our simulation platform.
+and weak scaling in our tests. 
 
-
-
-
-
-
-
+\iffalse
 \section{Acknowledgements}
 We would like to thank 
 Dhairya Malhotra, 
 Michael Shelley and 
 Shenglong Wang
 for support and various discussions throughout about various aspects of this work.
-This work was supported by the US National Science Foundation
-(\abbrev{NSF}) through grants DMS-1821334, DMS-1821305, DMS-1320621, DMS-1436591 and EAR-1646337.
-Computing time on TACC's Stampede2 supercomputer was provided through the Extreme Science and
-Engineering Discovery Environment (XSEDE), which is supported by
-National Science Foundation grant number ACI-1548562.
-
+\fi

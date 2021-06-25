@@ -1,30 +1,26 @@
 \section{Introduction\label{sec:intro}}
-%%
-%% Motivation
-%%
-%\para{Applications and challenges}
-The ability to simulate complex biological flows from first principles
-has the potential to provide  insight into complicated physiological processes. 
-Simulation of blood flow, in particular, is of paramount biological and clinical importance.
-Blood vessel constriction and dilation affects blood pressure, forces between \rbcs can cause clotting, various cells migrate differently through microfluidic devices.
+%The ability to simulate complex biological flows from first principles
+%has the potential to provide  insight into complicated physiological processes. 
+%Simulation of blood flow, in particular, is of paramount biological and clinical importance.
+%Blood vessel constriction and dilation affects blood pressure, forces between \rbcs can cause clotting, various cells migrate differently through microfluidic devices.
+%
+%
+%However, direct simulation of blood flow is an extremely challenging task.
+%Even simulating the blood flow in smaller vessels requires modeling millions of cells (one microliter of blood contains around five million \rbcs) along with a complex blood vessel.
+%\rbcs are highly deformable and cannot be well-approximated by rigid particles.
+%The volume fraction of cells in human blood flow reaches 45\%, which means that a very large fraction of cells are in close contact with other cells or vessel walls at any given time.
+%These constraints preclude a large number of discretization points per cell and make an evolving mesh of the fluid domain impractical and costly at large scale.
+%
+%Simulations capable of capturing these various types of flows faithfully must be
+%\begin{itemize}
+%\item \emph{numerically accurate}, to solve the model equations without
+%  concern for numerical error;
+%\item \emph{robust}, to handle high-volume-fraction flows, close contact between cells and vessel walls, complex geometries, and long simulation times;
+%\item \emph{efficient and scalable}, to support a realistic number of cells in
+%  flows through complex blood vessels.
+%\end{itemize}
 
-
-However, direct simulation of blood flow is an extremely challenging task.
-Even simulating the blood flow in smaller vessels requires modeling millions of cells (one microliter of blood contains around five million \rbcs) along with a complex blood vessel.
-\rbcs are highly deformable and cannot be well-approximated by rigid particles.
-The volume fraction of cells in human blood flow reaches 45\%, which means that a very large fraction of cells are in close contact with other cells or vessel walls at any given time.
-These constraints preclude a large number of discretization points per cell and make an evolving mesh of the fluid domain impractical and costly at large scale.
-
-Simulations capable of capturing these various types of flows faithfully must be
-\begin{itemize}
-\item \emph{numerically accurate}, to solve the model equations without
-  concern for numerical error;
-\item \emph{robust}, to handle high-volume-fraction flows, close contact between cells and vessel walls, complex geometries, and long simulation times;
-\item \emph{efficient and scalable}, to support a realistic number of cells in
-  flows through complex blood vessels.
-\end{itemize}
-
-Achieving these objectives for a blood flow simulation requires that the system meets a number of stringent requirements.
+Achieving a fast, numerically accurate, and robust blood flow simulation requires that the system meets a number of stringent requirements.
 While previous work has made significant progress \cite{Malhotra2017,lu2018parallel,rahimian2010petascale}, we focus on several new infrastructure components essential for handling confined flows and arbitrarily long-time, high volume fractions \rbc flows; in particular, our work is able to realize each of these goals.
 
 We formulate the viscous flow in blood vessels as an integro-differential equation and make use of fast scalable summation algorithms for efficient implementation, as in prior \rbc simulations \cite{Veerapaneni2011}. 
